@@ -1,0 +1,336 @@
+package eu.decentsoftware.holograms.plugin.commands;
+
+import com.google.common.collect.Lists;
+import eu.decentsoftware.holograms.Permissions;
+import eu.decentsoftware.holograms.api.DecentHolograms;
+import eu.decentsoftware.holograms.api.Lang;
+import eu.decentsoftware.holograms.api.commands.CommandBase;
+import eu.decentsoftware.holograms.api.commands.CommandHandler;
+import eu.decentsoftware.holograms.api.commands.CommandInfo;
+import eu.decentsoftware.holograms.api.commands.CommandManager;
+import eu.decentsoftware.holograms.api.commands.DecentCommand;
+import eu.decentsoftware.holograms.api.commands.TabCompleteHandler;
+import eu.decentsoftware.holograms.api.convertor.IConvertor;
+import eu.decentsoftware.holograms.api.holograms.Hologram;
+import eu.decentsoftware.holograms.api.holograms.HologramManager;
+import eu.decentsoftware.holograms.api.utils.Common;
+import eu.decentsoftware.holograms.api.utils.message.Message;
+import eu.decentsoftware.holograms.api.utils.scheduler.S;
+import eu.decentsoftware.holograms.display.command.DisplaysCommand;
+import eu.decentsoftware.holograms.plugin.Validator;
+import eu.decentsoftware.holograms.plugin.convertors.ConvertorFactory;
+import eu.decentsoftware.holograms.plugin.convertors.ConvertorResult;
+import eu.decentsoftware.holograms.plugin.convertors.ConvertorType;
+import eu.decentsoftware.holograms.profiler.DecentProfiler;
+import eu.decentsoftware.holograms.profiler.command.ProfilerCommand;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@CommandInfo(
+        aliases = {"holograms", "hologram", "dh", "holo"},
+        permissions = {Permissions.DEFAULT, Permissions.COMMAND_DECENT_HOLOGRAMS},
+        usage = "/dh <args>",
+        description = "The main DecentHolograms Command."
+)
+public class HologramsCommand extends DecentCommand {
+
+    private final JavaPlugin plugin;
+
+    public HologramsCommand(DisplaysCommand displaysCommand, DecentHolograms decentHolograms, ConvertorFactory convertorFactory) {
+        super("decentholograms");
+        this.plugin = decentHolograms.getPlugin();
+
+        CommandManager commandManager = decentHolograms.getCommandManager();
+        addSubCommand(new ProfilerCommand(DecentProfiler.getInstance()));
+        addSubCommand(new HelpSubCommand(commandManager));
+        addSubCommand(new ReloadSubCommand(decentHolograms));
+        HologramManager hologramManager = decentHolograms.getHologramManager();
+        addSubCommand(new ListSubCommand(hologramManager));
+        addSubCommand(new HologramSubCommand(hologramManager, commandManager));
+        if (displaysCommand != null) {
+            addSubCommand(displaysCommand);
+        }
+        addSubCommand(new LineSubCommand(hologramManager, commandManager));
+        addSubCommand(new FeatureSubCommand(decentHolograms.getFeatureManager(), commandManager));
+        addSubCommand(new PageSubCommand(hologramManager, commandManager));
+        addSubCommand(new ConvertSubCommand(convertorFactory));
+        addSubCommand(new VersionSubCommand(plugin));
+
+        // Shortcuts
+        addSubCommand(new HologramSubCommand.HologramCreateSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramDeleteSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramCloneSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramEnableSub());
+        addSubCommand(new HologramSubCommand.HologramDisableSub());
+        addSubCommand(new HologramSubCommand.HologramAlignSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramCenterSub());
+        addSubCommand(new HologramSubCommand.HologramInfoSub());
+        addSubCommand(new HologramSubCommand.HologramNearSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramTeleportSub());
+        addSubCommand(new HologramSubCommand.HologramMoveSub(hologramManager));
+        addSubCommand(new HologramSubCommand.HologramMovehereSub());
+    }
+
+    @Override
+    public CommandHandler getCommandHandler() {
+        return (sender, args) -> {
+            if (sender.hasPermission(Permissions.ADMIN)) {
+                if (args.length == 0) {
+                    Lang.USE_HELP.send(sender);
+                    return true;
+                }
+                Lang.UNKNOWN_SUB_COMMAND.send(sender);
+                Lang.USE_HELP.send(sender);
+            } else {
+                Lang.sendVersionMessage(sender, plugin.getDescription().getVersion());
+            }
+            return true;
+        };
+    }
+
+    @Override
+    public TabCompleteHandler getTabCompleteHandler() {
+        return null;
+    }
+
+    /*
+     *  SubCommands
+     */
+
+    @CommandInfo(
+            permissions = {Permissions.DEFAULT, Permissions.COMMAND_VERSION},
+            usage = "/dh version",
+            aliases = {"ver", "about"},
+            description = "Shows some info about your current DecentHolograms version."
+    )
+    public static class VersionSubCommand extends DecentCommand {
+
+        private final JavaPlugin plugin;
+
+        public VersionSubCommand(JavaPlugin plugin) {
+            super("version");
+            this.plugin = plugin;
+        }
+
+        @Override
+        public CommandHandler getCommandHandler() {
+            return (sender, args) -> {
+                Lang.sendVersionMessage(sender, plugin.getDescription().getVersion());
+                return true;
+            };
+        }
+
+        @Override
+        public TabCompleteHandler getTabCompleteHandler() {
+            return null;
+        }
+    }
+
+    @CommandInfo(
+            permissions = Permissions.COMMAND_RELOAD,
+            usage = "/dh reload",
+            description = "Reload the plugin."
+    )
+    public static class ReloadSubCommand extends DecentCommand {
+
+        private final DecentHolograms decentHolograms;
+
+        public ReloadSubCommand(DecentHolograms decentHolograms) {
+            super("reload");
+            this.decentHolograms = decentHolograms;
+        }
+
+        @Override
+        public CommandHandler getCommandHandler() {
+            return (sender, args) -> {
+                S.async(() -> {
+                    long start = System.currentTimeMillis();
+                    decentHolograms.reload();
+                    long end = System.currentTimeMillis();
+                    Lang.RELOADED.send(sender, end - start);
+                });
+                return true;
+            };
+        }
+
+        @Override
+        public TabCompleteHandler getTabCompleteHandler() {
+            return null;
+        }
+
+    }
+
+    @CommandInfo(
+            permissions = Permissions.COMMAND_HOLOGRAMS_LIST,
+            usage = "/dh list [page]",
+            description = "Show list of all Holograms.",
+            playerOnly = true
+    )
+    public static class ListSubCommand extends DecentCommand {
+
+        private final HologramManager hologramManager;
+
+        public ListSubCommand(HologramManager hologramManager) {
+            super("list");
+            this.hologramManager = hologramManager;
+        }
+
+        @Override
+        public CommandHandler getCommandHandler() {
+            return (sender, args) -> {
+                final List<Hologram> holograms = Lists.newArrayList(hologramManager.getHolograms());
+                if (holograms.isEmpty()) {
+                    Common.tell(sender, "%sThere are currently no holograms.", Common.PREFIX);
+                    return true;
+                }
+                int currentPage = args.length >= 1 ? Validator.getInteger(args[0], "Page must be a valid integer.") - 1 : 0;
+                List<String> header = Lists.newArrayList("", " &3&lHOLOGRAM LIST - #" + (currentPage + 1), " &fList of all existing holograms.", "");
+                Function<Hologram, String> parseItem = hologram -> {
+                    Location l = hologram.getLocation();
+                    String name = (hologram.isEnabled() ? "" : "&c") + hologram.getName();
+                    return String.format(" &8• &b%s &8| &7%s, %.2f, %.2f, %.2f", name, l.getWorld().getName(), l.getX(), l.getY(), l.getZ());
+                };
+                Message.sendPaginatedMessage((Player) sender, currentPage, "/dh list %d", 15, header, null, holograms, parseItem);
+                return true;
+            };
+        }
+
+        @Override
+        public TabCompleteHandler getTabCompleteHandler() {
+            return (sender, args) -> {
+                if (args.length != 1) {
+                    return null;
+                }
+
+                int holograms = hologramManager.getHolograms().size();
+                if (holograms == 0) {
+                    return null;
+                }
+
+                List<String> pages = new ArrayList<>();
+                int page = 0;
+                while (holograms > 0) {
+                    page++;
+                    pages.add(String.valueOf(page));
+                    holograms -= 15;
+                }
+
+                return TabCompleteHandler.getPartialMatches(args[0], pages);
+            };
+        }
+
+    }
+
+    @CommandInfo(
+            permissions = Permissions.COMMAND_HELP,
+            usage = "/dh help",
+            description = "Show general help.",
+            aliases = {"?"}
+    )
+    public static class HelpSubCommand extends DecentCommand {
+
+        private final CommandManager commandManager;
+
+        public HelpSubCommand(CommandManager commandManager) {
+            super("help");
+            this.commandManager = commandManager;
+        }
+
+        @Override
+        public CommandHandler getCommandHandler() {
+            return (sender, args) -> {
+                sender.sendMessage("");
+                Common.tell(sender, " &3&lDECENT HOLOGRAMS HELP");
+                Common.tell(sender, " All general commands.");
+                sender.sendMessage("");
+                CommandBase command = commandManager.getMainCommand();
+                printHelpSubCommandsAndAliases(sender, command,
+                        subCommand -> !subCommand.getClass().toString().contains("HologramSubCommand"));
+                return true;
+            };
+        }
+
+        @Override
+        public TabCompleteHandler getTabCompleteHandler() {
+            return null;
+        }
+
+    }
+
+    @CommandInfo(
+            permissions = Permissions.COMMAND_HOLOGRAMS_CONVERT,
+            usage = "/dh convert <plugin> [file]",
+            description = "Convert holograms from given plugin.",
+            minArgs = 1
+    )
+    public static class ConvertSubCommand extends DecentCommand {
+
+        private final ConvertorFactory convertorFactory;
+
+        public ConvertSubCommand(ConvertorFactory convertorFactory) {
+            super("convert");
+            this.convertorFactory = convertorFactory;
+        }
+
+        @Override
+        public CommandHandler getCommandHandler() {
+            return (sender, args) -> {
+                final ConvertorType convertorType = ConvertorType.fromString(args[0]);
+                final String path = args.length >= 2 ? args[1] : null;
+                if (convertorType == null) {
+                    Common.tell(sender, "%s&cCannot convert Holograms! Unknown plugin '%s' provided", Common.PREFIX, args[0]);
+                    return true;
+                }
+
+                long startTime = System.currentTimeMillis();
+                IConvertor convertor = convertorFactory.getConvertor(convertorType);
+                if (convertor == null) {
+                    Common.tell(sender, "%s&cCannot convert Holograms! Unknown plugin '%s' provided", Common.PREFIX, args[0]);
+                    return true;
+                }
+
+                Common.tell(sender, "%sConverting holograms from %s...", Common.PREFIX, convertorType.getName());
+                if (convertorType.isLimited()) {
+                    Common.tell(sender, "%s&6NOTE: %s support is limited!", Common.PREFIX, convertorType.getName());
+                }
+
+                ConvertorResult result;
+                if (path != null) {
+                    File file = new File(path);
+                    result = convertor.convert(file);
+                } else {
+                    result = convertor.convert();
+                }
+                sendResult(sender, startTime, result);
+                return true;
+            };
+        }
+
+        public void sendResult(CommandSender sender, long startTime, ConvertorResult result) {
+            Common.tell(sender, "%sConverted %d hologram(s) in %s ms!", Common.PREFIX, result.getTotalCount(), System.currentTimeMillis() - startTime);
+            Common.tell(sender, "%s- &a%d successful", Common.PREFIX, result.getSuccessCount());
+            Common.tell(sender, "%s- &e%d skipped", Common.PREFIX, result.getSkippedCount());
+            Common.tell(sender, "%s- &c%d failed", Common.PREFIX, result.getFailedCount());
+        }
+
+        @Override
+        public TabCompleteHandler getTabCompleteHandler() {
+            return (sender, args) -> {
+                if (args.length == 1) {
+                    return TabCompleteHandler.getPartialMatches(args[0], Arrays.stream(ConvertorType.values()).map(ConvertorType::getName).collect(Collectors.toList()));
+                }
+                return null;
+            };
+        }
+
+    }
+}

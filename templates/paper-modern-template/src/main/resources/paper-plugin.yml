@@ -1,0 +1,9 @@
+name: ModernPaperTemplate
+version: '${version}'
+main: com.example.paperplugin.ExamplePaperPlugin
+bootstrapper: com.example.paperplugin.PaperPluginBootstrap
+description: Template Modern Plugin Minecraft Paper Java
+api-version: '1.21'
+folia-supported: true
+authors:
+  - Developer

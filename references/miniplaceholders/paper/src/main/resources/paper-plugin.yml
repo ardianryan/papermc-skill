@@ -1,0 +1,10 @@
+name: MiniPlaceholders
+authors:
+  - MiniPlaceholders Contributors
+version: '${version}'
+main: io.github.miniplaceholders.paper.PaperPlugin
+bootstrapper: io.github.miniplaceholders.paper.PaperBootstrap
+description: MiniMessage Component-based Placeholders API
+api-version: '1.21'
+folia-supported: true
+has-open-classloader: true

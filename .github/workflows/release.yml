@@ -1,0 +1,80 @@
+name: Automated Release & Publish
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger saat tag baru dipush (contoh: v1.0.0, v1.0.1)
+  workflow_dispatch: # Memungkinkan trigger manual dari GitHub UI jika dibutuhkan
+
+jobs:
+  release-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Diperlukan untuk membuat GitHub Release
+      id-token: write # Diperlukan untuk NPM Provenance (OIDC)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify Starter Template Compilation
+        working-directory: templates/paper-modern-template
+        run: |
+          chmod +x gradlew
+          ./gradlew compileJava
+
+      - name: Extract Version & Changelog Notes
+        id: extract_release
+        run: |
+          node -e '
+          const fs = require("fs");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const version = pkg.version;
+          const changelog = fs.readFileSync("CHANGELOG.md", "utf8");
+
+          // Ekstrak bagian changelog sesuai versi saat ini
+          const escapedVersion = version.replace(/\./g, "\\.");
+          const regex = new RegExp(`## \\\\\\[${escapedVersion}\\\\\\][\\s\\S]*?(?=\\n## \\\\\\[|$)`);
+          const match = changelog.match(regex);
+          
+          let releaseNotes = "";
+          if (match) {
+            // Hapus header baris pertama
+            releaseNotes = match[0].replace(/^## \[[^\n]+\n+/, "").trim();
+          } else {
+            releaseNotes = `Automated release for version ${version}. See CHANGELOG.md for full details.`;
+          }
+
+          fs.writeFileSync("RELEASE_NOTES.md", releaseNotes);
+          console.log(`Extracted release notes for version ${version}:`);
+          console.log(releaseNotes);
+          '
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM with Provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

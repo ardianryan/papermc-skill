@@ -1,0 +1,28 @@
+plugins {
+    id 'dh.nms-aggregator'
+}
+
+dependencies {
+    childProjects.values().each { child ->
+        runtimeOnly project(child.path)
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            setSrcDirs([])
+        }
+        resources {
+            setSrcDirs([])
+        }
+    }
+    test {
+        java {
+            setSrcDirs([])
+        }
+        resources {
+            setSrcDirs([])
+        }
+    }
+}

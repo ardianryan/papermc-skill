@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "miniplaceholders",
+  "version": "${version}",
+  "name": "MiniPlaceholders",
+  "description": "MiniMessage Component-based Placeholders API",
+  "authors": [
+    "4drian3d"
+  ],
+  "contact": {
+    "homepage": "https://miniplaceholders.github.io/",
+    "sources": "https://github.com/MiniPlaceholders/MiniPlaceholders",
+    "issues": "https://github.com/MiniPlaceholders/MiniPlaceholders/issues"
+  },
+  "license": "Apache-2",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "io.github.miniplaceholders.fabric.FabricMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "fabric-api": "*",
+    "java": ">=25",
+    "adventure-platform-fabric": ">6.8.0",
+    "minecraft": ">=26.1",
+    "fabric-permissions-api-v0": ">=0.7.0"
+  }
+}

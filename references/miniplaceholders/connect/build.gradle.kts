@@ -1,0 +1,3 @@
+plugins {
+    id("miniplaceholders.base")
+}

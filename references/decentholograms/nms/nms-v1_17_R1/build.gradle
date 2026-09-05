@@ -1,0 +1,5 @@
+plugins {
+    id 'dh.nms-module'
+}
+
+nmsModule("1.17.1-R0.1-SNAPSHOT", 16)

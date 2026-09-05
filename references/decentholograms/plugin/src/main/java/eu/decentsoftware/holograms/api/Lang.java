@@ -1,0 +1,244 @@
+package eu.decentsoftware.holograms.api;
+
+import com.google.common.collect.Maps;
+import eu.decentsoftware.holograms.api.holograms.Hologram;
+import eu.decentsoftware.holograms.api.holograms.enums.EnumFlag;
+import eu.decentsoftware.holograms.api.utils.Common;
+import eu.decentsoftware.holograms.api.utils.config.ConfigValue;
+import eu.decentsoftware.holograms.api.utils.config.FileConfig;
+import eu.decentsoftware.holograms.api.utils.config.Phrase;
+import eu.decentsoftware.holograms.logging.Log;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+public final class Lang {
+
+    private Lang() {
+        throw new UnsupportedOperationException("Cannot instantiate utility class");
+    }
+
+    // General
+    public static final Phrase PREFIX = new Phrase("prefix", Common.PREFIX);
+    public static final Phrase NO_PERM = new Phrase("no_perm", "{prefix}&cYou are not allowed to use this.");
+    public static final Phrase ONLY_PLAYER = new Phrase("only_player", "{prefix}&cThis action can only be executed by player.");
+    public static final Phrase RELOADED = new Phrase("reloaded", "{prefix}&aSuccessfully reloaded in %1$d ms!");
+    public static final Phrase NEW_VERSION_AVAILABLE = new Phrase("new_version_available", "&fA newer version of &3DecentHolograms &fis available. Download it from:");
+
+    // Commands
+    public static final Phrase USE_HELP = new Phrase("command.use_help", "{prefix}Use &b/holograms help&7 to view possible commands.");
+    public static final Phrase COMMAND_USAGE = new Phrase("command.usage", "{prefix}Usage: &b%1$s");
+    public static final Phrase UNKNOWN_SUB_COMMAND = new Phrase("command.unknown_sub_command", "{prefix}Unknown sub command.");
+
+    // Hologram Edit
+    public static final Phrase HOLOGRAM_DOES_NOT_EXIST = new Phrase("hologram.does_not_exist", "{prefix}&cHologram with that name doesn't exist.");
+    public static final Phrase HOLOGRAM_ALREADY_EXISTS = new Phrase("hologram.already_exists", "{prefix}&cHologram with that name already exists.");
+    public static final Phrase HOLOGRAM_INVALID_NAME = new Phrase("hologram.invalid_name", "{prefix}&cInvalid name '%1$s', only use alphanumerical characters, underscore and dash.");
+    public static final Phrase HOLOGRAM_CREATED = new Phrase("hologram.created", "{prefix}Hologram has been created!");
+    public static final Phrase HOLOGRAM_CLONED = new Phrase("hologram.cloned", "{prefix}Hologram has been cloned!");
+    public static final Phrase HOLOGRAM_DELETED = new Phrase("hologram.deleted", "{prefix}Hologram has been deleted!");
+    public static final Phrase HOLOGRAM_UPDATED = new Phrase("hologram.updated", "{prefix}Hologram has been updated!");
+    public static final Phrase HOLOGRAM_RENAMED = new Phrase("hologram.renamed", "{prefix}Hologram has been renamed! &7(&b%1$s&7 -> &b%2$s&7)");
+    public static final Phrase HOLOGRAM_TELEPORTED = new Phrase("hologram.teleported", "{prefix}Teleported!");
+    public static final Phrase HOLOGRAM_WORLD_DOES_NOT_EXIST = new Phrase("hologram.world_does_not_exist", "{prefix}&cWorld of hologram '%1$s' doesn't exist!");
+    public static final Phrase HOLOGRAM_MOVED = new Phrase("hologram.moved", "{prefix}Hologram has been moved!");
+    public static final Phrase HOLOGRAM_ALIGNED = new Phrase("hologram.aligned", "{prefix}Hologram has been aligned!");
+    public static final Phrase HOLOGRAM_ALIGN_SELF = new Phrase("hologram.align_self", "{prefix}Cannot align a Hologram to itself!");
+    public static final Phrase HOLOGRAM_ALIGN_AXIS = new Phrase("hologram.align_axis", "{prefix}That axis does not exist!");
+    public static final Phrase HOLOGRAM_DOWN_ORIGIN_SET = new Phrase("hologram.down_origin_set", "{prefix}Origin has been set to &b'%1$s'&7!");
+    public static final Phrase HOLOGRAM_DOWN_ORIGIN_DOES_NOT_EXIST = new Phrase("hologram.down_origin_does_not_exist", "{prefix}Down origin value must be either true or false!");
+    public static final Phrase HOLOGRAM_FACING_SET = new Phrase("hologram.facing_set", "{prefix}Facing has been set!");
+    public static final Phrase HOLOGRAM_FLAG_ADDED = new Phrase("hologram.flag_add", "{prefix}Flag &b\"%1$s\"&7 has been added!");
+    public static final Phrase HOLOGRAM_FLAG_REMOVED = new Phrase("hologram.flag_remove", "{prefix}Flag &b\"%1$s\"&7 has been removed!");
+    public static final Phrase HOLOGRAM_PERMISSION_SET = new Phrase("hologram.permission_set", "{prefix}Permission has been set!");
+    public static final Phrase HOLOGRAM_PERMISSION_REMOVED = new Phrase("hologram.permission_removed", "{prefix}Permission has been removed!");
+    public static final Phrase HOLOGRAM_DISPLAY_RANGE_SET = new Phrase("hologram.display_range_set", "{prefix}Display range has been set!");
+    public static final Phrase HOLOGRAM_UPDATE_RANGE_SET = new Phrase("hologram.update_range_set", "{prefix}Update range has been set!");
+    public static final Phrase HOLOGRAM_UPDATE_INTERVAL_SET = new Phrase("hologram.update_interval_set", "{prefix}Update interval has been set!");
+    public static final Phrase HOLOGRAM_DISABLED = new Phrase("hologram.disabled", "{prefix}Hologram has been disabled!");
+    public static final Phrase HOLOGRAM_ALREADY_DISABLED = new Phrase("hologram.already_disabled", "{prefix}Hologram is already disabled!");
+    public static final Phrase HOLOGRAM_ENABLED = new Phrase("hologram.enabled", "{prefix}Hologram has been enabled!");
+    public static final Phrase HOLOGRAM_ALREADY_ENABLED = new Phrase("hologram.already_enabled", "{prefix}Hologram is already enabled!");
+
+    // Page Edit
+    public static final Phrase PAGE_ADDED = new Phrase("page.added", "{prefix}Page has been added!");
+    public static final Phrase PAGE_ADD_FAILED = new Phrase("page.add_failed", "{prefix}Page has been added!");
+    public static final Phrase PAGE_INSERTED = new Phrase("page.inserted", "{prefix}Page has been inserted!");
+    public static final Phrase PAGE_INSERT_FAILED = new Phrase("page.insert_failed", "{prefix}Page has been inserted!");
+    public static final Phrase PAGE_DELETED = new Phrase("page.deleted", "{prefix}Page has been deleted!");
+    public static final Phrase PAGE_SWAPPED = new Phrase("page.swapped", "{prefix}Pages swapped!");
+    public static final Phrase PAGE_SWAP_SELF = new Phrase("page.swap_self", "{prefix}&cCannot swap a page with itself!");
+    public static final Phrase PAGE_SWAP_FAILED = new Phrase("page.swap_failed", "{prefix}&cFailed to swap pages.");
+    public static final Phrase PAGE_DOES_NOT_EXIST = new Phrase("page.does_not_exist", "{prefix}&cThat page doesn't exist.");
+
+    // Actions
+    public static final Phrase CLICK_TYPE_DOES_NOT_EXIST = new Phrase("action.click_type_does_not_exist", "{prefix}&cThat click type doesn't exist.");
+    public static final Phrase ACTION_DOES_NOT_EXIST = new Phrase("action.does_not_exist", "{prefix}&cThat action doesn't exist.");
+    public static final Phrase ACTION_ADDED = new Phrase("action.added", "{prefix}Action has been added.");
+    public static final Phrase ACTION_REMOVED = new Phrase("action.removed", "{prefix}Action has been removed.");
+    public static final Phrase ACTION_CLEARED = new Phrase("action.cleared", "{prefix}Actions have been cleared.");
+    public static final Phrase ACTION_NO_ACTIONS = new Phrase("action.no_actions", "{prefix}There are no actions set on that click type.");
+
+    // Line Edit
+    public static final Phrase LINE_ADDED = new Phrase("line.added", "{prefix}Line has been added!");
+    public static final Phrase LINE_ADD_FAILED = new Phrase("line.add_failed", "{prefix}&cFailed to add line.");
+    public static final Phrase LINE_SET = new Phrase("line.set", "{prefix}Line has been set!");
+    public static final Phrase LINE_EDIT = new Phrase("line.edit", "{prefix}&a&l&nClick to edit the line!");
+    public static final Phrase LINE_EDIT_HOVER = new Phrase("line.edit_hover", "&r%1$s");
+    public static final Phrase LINE_INSERTED = new Phrase("line.inserted", "{prefix}Line has been inserted!");
+    public static final Phrase LINE_INSERT_FAILED = new Phrase("line.insert_failed", "{prefix}&cFailed to insert line.");
+    public static final Phrase LINE_REMOVED = new Phrase("line.removed", "{prefix}Line has been removed!");
+    public static final Phrase LINE_SWAPPED = new Phrase("line.swapped", "{prefix}Lines has been swapped!");
+    public static final Phrase LINE_SWAP_SELF = new Phrase("line.swap_self", "{prefix}&cCannot swap a line with itself!");
+    public static final Phrase LINE_SWAP_FAILED = new Phrase("line.swap_failed", "{prefix}&cFailed to swap lines.");
+    public static final Phrase LINE_ALIGNED = new Phrase("line.aligned", "{prefix}Line has been aligned!");
+    public static final Phrase LINE_ALIGN_SELF = new Phrase("line.align_self", "{prefix}Cannot align a Line to itself!");
+    public static final Phrase LINE_ALIGN_AXIS = new Phrase("line.align_axis", "{prefix}That axis does not exist!");
+    public static final Phrase LINE_HEIGHT_SET = new Phrase("line.height_set", "{prefix}Line height has been set!");
+    public static final Phrase LINE_OFFSETX_SET = new Phrase("line.offsetx_set", "{prefix}Line OffsetX has been set!");
+    public static final Phrase LINE_OFFSETZ_SET = new Phrase("line.offsetz_set", "{prefix}Line OffsetZ has been set!");
+    public static final Phrase LINE_FLAG_ADDED = new Phrase("line.flag_added", "{prefix}Flag &b\"%1$s\"&7 has been added!");
+    public static final Phrase LINE_FLAG_REMOVED = new Phrase("line.flag_removed", "{prefix}Flag &b\"%1$s\"&7 has been removed!");
+    public static final Phrase LINE_DOES_NOT_EXIST = new Phrase("line.does_not_exist", "{prefix}&cThat line doesn't exist.");
+    public static final Phrase LINE_PERMISSION_SET = new Phrase("line.permission_set", "{prefix}Permission has been set!");
+    public static final Phrase LINE_PERMISSION_REMOVED = new Phrase("line.permission_removed", "{prefix}Permission has been removed!");
+    public static final Phrase LINE_FACING_SET = new Phrase("line.facing_set", "{prefix}Facing has been set!");
+
+    // Features
+    public static final Phrase FEATURE_DOES_NOT_EXIST = new Phrase("feature.does_not_exist", "{prefix}&cFeature \"%1$s\" does not exist.");
+    public static final Phrase FEATURE_ENABLED = new Phrase("feature.enabled", "{prefix}Feature &b\"%1$s\"&7 has been enabled!");
+    public static final Phrase FEATURE_ALREADY_ENABLED = new Phrase("feature.already_enabled", "{prefix}&cFeature \"%1$s\" is already enabled!");
+    public static final Phrase FEATURE_DISABLED = new Phrase("feature.disabled", "{prefix}Feature &b\"%1$s\"&7 has been disabled!");
+    public static final Phrase FEATURE_ALREADY_DISABLED = new Phrase("feature.already_disabled", "{prefix}&cFeature \"%1$s\" is already disabled!");
+    public static final Phrase FEATURE_RELOADED = new Phrase("feature.reloaded", "{prefix}Feature &b\"%1$s\"&7 has been reloaded!");
+
+    // Displays
+    public static final Phrase DISPLAY_DOES_NOT_EXIST = new Phrase("display.does_not_exist", "{prefix}&cDisplay with that name doesn't exist.");
+    public static final Phrase DISPLAY_ALREADY_EXISTS = new Phrase("display.already_exists", "{prefix}&cDisplay with that name already exists.");
+    public static final Phrase DISPLAY_INVALID_TYPE = new Phrase("display.invalid_type", "{prefix}&cInvalid display type '%1$s'. Valid types are: &b%2$s&7.");
+    public static final Phrase DISPLAY_INVALID_NAME = new Phrase("display.invalid_name", "{prefix}&cInvalid name '%1$s', only use alphanumerical characters, underscore and dash.");
+    public static final Phrase DISPLAY_CREATED = new Phrase("display.created", "{prefix}Display &b'%1$s'&7 has been created!");
+    public static final Phrase DISPLAY_DELETED = new Phrase("display.deleted", "{prefix}Display has been deleted!");
+    public static final Phrase DISPLAY_MOVED = new Phrase("display.moved", "{prefix}Display has been moved!");
+    public static final Phrase DISPLAY_RENAMED = new Phrase("display.renamed", "{prefix}Display has been renamed!");
+    public static final Phrase DISPLAY_CLONED = new Phrase("display.cloned", "{prefix}Display has been cloned!");
+    public static final Phrase DISPLAY_ENABLED = new Phrase("display.enabled", "{prefix}Display has been enabled!");
+    public static final Phrase DISPLAY_DISABLED = new Phrase("display.disabled", "{prefix}Display has been disabled!");
+    public static final Phrase DISPLAY_DISPLAY_RANGE_SET = new Phrase("display.display_range_set", "{prefix}Display range has been set!");
+    public static final Phrase DISPLAY_UPDATE_INTERVAL_SET = new Phrase("display.update_interval_set", "{prefix}Update interval has been set!");
+    public static final Phrase DISPLAY_FACING_SET = new Phrase("display.facing.set", "{prefix}Facing has been set!");
+    public static final Phrase DISPLAY_FACING_INVALID_YAW = new Phrase("display.facing.invalid_yaw", "{prefix}&cYaw must be a valid number between -180 and 180 degrees.");
+    public static final Phrase DISPLAY_FACING_INVALID_PITCH = new Phrase("display.facing.invalid_pitch", "{prefix}&cPitch must be a valid number between -90 and 90 degrees.");
+    public static final Phrase DISPLAY_ATTRIBUTE_DOES_NOT_EXIST = new Phrase("display.attribute.does_not_exist", "{prefix}Attribute &b'%1$s'&7 does not exist for that display.");
+    public static final Phrase DISPLAY_ATTRIBUTE_INVALID_VALUE = new Phrase("display.attribute.invalid_value", "{prefix}&cInvalid value for attribute '%1$s'&c: %2$s");
+    public static final Phrase DISPLAY_ATTRIBUTE_SET = new Phrase("display.attribute.set", "{prefix}Set attribute &b'%1$s'&7 to &b'%2$s&b'&7.");
+    public static final Phrase DISPLAY_ATTRIBUTE_RESET = new Phrase("display.attribute.reset", "{prefix}Reset attribute &b'%1$s'&7.");
+    public static final Phrase DISPLAY_ATTRIBUTE_GET = new Phrase("display.attribute.get", "{prefix}Attribute &b'%1$s'&7 is set to value: &b'%2$s&b'&7.");
+    public static final Phrase DISPLAY_ATTRIBUTE_GET_NOT_SET = new Phrase("display.attribute.get_not_set", "{prefix}Attribute &b'%1$s'&7 is not set.");
+    public static final Phrase DISPLAY_ATTRIBUTE_LIST_HEADER = new Phrase("display.attribute.list.header", "&r\n&3&lDISPLAY ATTRIBUTES\n&fAll attributes of display '%s'.\n&r");
+    public static final Phrase DISPLAY_ATTRIBUTE_LIST_ENTRY = new Phrase("display.attribute.list.entry", " &8• &7%s: &b%s");
+    public static final Phrase DISPLAY_ATTRIBUTE_LIST_FOOTER = new Phrase("display.attribute.list.footer", "\n");
+    public static final Phrase DISPLAY_ATTRIBUTE_LIST_EMPTY = new Phrase("display.attribute.list.empty", "{prefix}There are no attributes set on that display.");
+    public static final Phrase DISPLAY_TELEPORTED = new Phrase("display.teleported", "{prefix}&aTeleported!");
+    public static final Phrase DISPLAY_WORLD_DOES_NOT_EXIST = new Phrase("display.world_does_not_exist", "{prefix}&cWorld of display '%1$s' doesn't exist!");
+    public static final Phrase DISPLAY_LIST_NO_DISPLAYS = new Phrase("display.list.no_displays", "{prefix}There are currently no displays.");
+    public static final Phrase DISPLAY_NEARBY_NO_DISPLAYS = new Phrase("display.nearby.no_displays", "{prefix}There are no displays nearby.");
+    public static final Phrase DISPLAY_WRONG_TYPE = new Phrase("display.wrong_type", "{prefix}&cDisplay is not of type '%1$s'.");
+    public static final Phrase DISPLAY_INVALID_BLOCK_TYPE = new Phrase("display.invalid_block_type", "{prefix}&cInvalid block type: '%1$s'");
+    public static final Phrase DISPLAY_MISSING_BLOCK_CONTENT = new Phrase("display.missing_block_content", "{prefix}&cContent is mandatory for block displays.");
+    public static final Phrase DISPLAY_BLOCK_SET = new Phrase("display.block_set", "{prefix}Set block of display &b'%1$s'&7 to &b'%2$s'&7.");
+    public static final Phrase DISPLAY_INVALID_ITEM_TYPE = new Phrase("display.invalid_item_type", "{prefix}&cInvalid item type: '%1$s'");
+    public static final Phrase DISPLAY_MISSING_ITEM_CONTENT = new Phrase("display.missing_item_content", "{prefix}&cContent is mandatory for item displays.");
+    public static final Phrase DISPLAY_ITEM_SET = new Phrase("display.item_set", "{prefix}Set item of display &b'%1$s'&7 to &b'%2$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_ADDED = new Phrase("display.text.line.added", "{prefix}Added line to display &b'%1$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_SET = new Phrase("display.text.line.set", "{prefix}Set line &b%2$d&7 of display &b'%1$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_REMOVED = new Phrase("display.text.line.removed", "{prefix}Removed line &b%2$d&7 of display &b'%1$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_INSERTED = new Phrase("display.text.line.inserted", "{prefix}Inserted line to display &b'%1$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_SWAPPED = new Phrase("display.text.line.swapped", "{prefix}Swapped lines &b%2$d&7 and &b%3$d&7 of display &b'%1$s'&7.");
+    public static final Phrase DISPLAY_TEXT_LINE_CANNOT_SWAP_SELF = new Phrase("display.text.line.cannot_swap_self", "{prefix}&cCannot swap a line with itself!");
+
+    // Profiler
+    public static final Phrase PROFILER_STARTED = new Phrase("profiler.started", "{prefix}Profiler has been started!");
+    public static final Phrase PROFILER_ALREADY_RUNNING = new Phrase("profiler.already_running", "{prefix}Profiler is already running!");
+    public static final Phrase PROFILER_STOPPED = new Phrase("profiler.disabled", "{prefix}Profiler has been disabled!");
+    public static final Phrase PROFILER_NOT_RUNNING = new Phrase("profiler.not_running", "{prefix}Profiler is not running!");
+    public static final Phrase PROFILER_RESET = new Phrase("profiler.reset", "{prefix}Profiler has been reset!");
+    public static final Phrase PROFILER_TIMER_RESET = new Phrase("profiler.timer_reset", "{prefix}Timer &b'%1$s'&7 has been reset!");
+    public static final Phrase PROFILER_STATS = new Phrase("profiler.stats", "{prefix}Profiler stats:&f\n%1$s");
+    public static final Phrase PROFILER_TIMER_NOT_FOUND = new Phrase("profiler.timer_not_found", "{prefix}Timer with id &b'%1$s'&7 not found!");
+
+    /*
+     *	General Methods
+     */
+
+    private static final Map<String, ConfigValue<?>> VALUES = Maps.newHashMap();
+
+    static {
+        try {
+            Field[] fields = Lang.class.getFields();
+            for (Field field : fields) {
+                if (field.getType().isAssignableFrom(Phrase.class)) {
+                    VALUES.put(field.getName(), (Phrase) field.get(null));
+                }
+            }
+        } catch (IllegalAccessException e) {
+            Log.warn("Failed to load Lang values.", e);
+        }
+    }
+
+    public static void reload(JavaPlugin plugin) {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+        FileConfig config = new FileConfig(plugin, "lang.yml");
+        VALUES.values().forEach(configValue -> configValue.updateValue(config));
+        Common.PREFIX = PREFIX.getValue();
+    }
+
+    public static void sendVersionMessage(CommandSender sender, String version) {
+        Objects.requireNonNull(sender, "sender cannot be null");
+        Objects.requireNonNull(version, "version cannot be null");
+        Common.tell(sender,
+                "\n&fThis server is running &3DecentHolograms v%s&f by &bd0by&f: \n&f- &7%s\n&f- &7%s",
+                version,
+                "https://www.spigotmc.org/resources/96927/",
+                "https://modrinth.com/plugin/decentholograms"
+        );
+    }
+
+    public static void sendUpdateMessage(CommandSender sender) {
+        Objects.requireNonNull(sender, "sender cannot be null");
+        Common.tell(sender,
+                "\n" + NEW_VERSION_AVAILABLE.getValue() + " \n&f- &7%s\n&f- &7%s",
+                "https://www.spigotmc.org/resources/96927/",
+                "https://modrinth.com/plugin/decentholograms"
+        );
+    }
+
+    public static List<String> getHologramInfo(Hologram hologram) {
+        Objects.requireNonNull(hologram, "hologram cannot be null");
+        List<String> info = new ArrayList<>();
+        Location l = hologram.getLocation();
+        info.add(String.format(" &8• &7Location: &b%s, %.2f, %.2f, %.2f", l.getWorld().getName(), l.getX(), l.getY(), l.getZ()));
+        info.add(String.format(" &8• &7Enabled: &b%s", hologram.isEnabled()));
+        if (hologram.getPermission() != null && !hologram.getPermission().isEmpty()) {
+            info.add(String.format(" &8• &7Permission: &b%s", hologram.getPermission()));
+        }
+        info.add(String.format(" &8• &7Pages: &b%d", hologram.size()));
+        info.add(String.format(" &8• &7Facing: &b%.1f deg", hologram.getFacing()));
+        info.add(String.format(" &8• &7Down Origin: &b%b", hologram.isDownOrigin()));
+        info.add(String.format(" &8• &7Update Interval: &b%d ticks", hologram.getUpdateInterval()));
+        info.add(String.format(" &8• &7Update Range: &b%d", hologram.getUpdateRange()));
+        info.add(String.format(" &8• &7Display Range: &b%d", hologram.getDisplayRange()));
+        if (!hologram.getFlags().isEmpty()) {
+            info.add(String.format(" &8• &7Flags: &b%s", hologram.getFlags().stream().map(EnumFlag::name).collect(Collectors.joining(", "))));
+        }
+        return info;
+    }
+
+}

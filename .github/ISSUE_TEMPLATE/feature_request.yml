@@ -1,0 +1,28 @@
+name: Feature / Recipe Request
+description: Suggest a new technical guide, recipe pattern, or reference addition
+title: "[Feature]: "
+labels: ["enhancement", "documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a modern Paper development recipe or reference project? Tell us about it!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What challenge or use-case are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution / Recipe
+      description: Describe the recipe, architectural pattern, or library integration you would like to see added.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative libraries or workarounds?

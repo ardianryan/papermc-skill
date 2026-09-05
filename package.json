@@ -1,0 +1,44 @@
+{
+  "name": "papermc-skill",
+  "version": "1.0.0",
+  "description": "Interactive CLI and architectural development skill for modern Paper & Folia Minecraft Java plugins",
+  "main": "bin/cli.js",
+  "bin": {
+    "papermc-skill": "bin/cli.js"
+  },
+  "type": "module",
+  "files": [
+    "bin",
+    "templates",
+    "docs",
+    "skills",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "minecraft",
+    "paper",
+    "papermc",
+    "folia",
+    "minecraft-plugin",
+    "adventure-api",
+    "minimessage",
+    "spigot",
+    "bukkit",
+    "npx"
+  ],
+  "author": "Ardian Ryan <https://github.com/ardianryan>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardianryan/papermc-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ardianryan/papermc-skill/issues"
+  },
+  "homepage": "https://github.com/ardianryan/papermc-skill#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

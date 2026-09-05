@@ -1,0 +1,38 @@
+name: Bug Report
+description: Report a bug, outdated API, or broken code snippet in the repository
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please provide as much detail as possible to help us reproduce and address the problem.
+  - type: input
+    id: version
+    attributes:
+      label: Target Minecraft & Paper Version
+      description: What version of Minecraft and Paper are you targeting?
+      placeholder: e.g., Paper 1.21.4 (Build 120), Java 21
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the issue is.
+    validations:
+      required: true
+  - type: textarea
+    id: affected-file
+    attributes:
+      label: Affected File or Guide
+      description: Which file in this repository is affected?
+      placeholder: e.g., docs/04-commands-and-brigadier.md or templates/paper-modern-template/build.gradle.kts
+    validations:
+      required: true
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Relevant Log Output or Stacktrace
+      description: Paste any error logs, compiler messages, or stacktraces here.
+      render: shell
