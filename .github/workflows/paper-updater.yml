@@ -39,7 +39,7 @@ jobs:
           ./gradlew compileJava --no-daemon
 
       - name: Create Pull Request if Updates Available
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): bump PaperMC and Minecraft version to latest"
           title: "🤖 chore(deps): Automated PaperMC & Minecraft Version Bump"
