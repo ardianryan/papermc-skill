@@ -59,7 +59,8 @@
   </defs>
 
   <style>
-    /* CSS & Fallback Keyframes */
+    <![CDATA[
+    /* CSS Animations */
     @keyframes float-sword {
       0%, 100% { transform: translateY(0px) rotate(-16deg); }
       50% { transform: translateY(-14px) rotate(-12deg); }
@@ -109,6 +110,7 @@
       font-weight: 900;
       letter-spacing: 2px;
     }
+    ]]>
   </style>
 
   <!-- Frame Background & Border -->
