@@ -31,7 +31,7 @@ dependencies {
     // paperweight.paperDevBundle("1.21.4.build.+")
 
     // Anotasi nullability
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.1")
 }
 
 tasks {
