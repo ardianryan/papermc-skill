@@ -237,6 +237,92 @@ function handleDocs(topic) {
   console.log(content);
 }
 
+async function handleCheckUpdate(options = []) {
+  printBanner();
+  console.log(`${c.bold}Checking PaperMC Fill API for the latest versions...${c.reset}\n`);
+
+  try {
+    const res = await fetch('https://fill.papermc.io/v3/projects/paper', {
+      headers: {
+        'User-Agent': 'papermc-skill/1.0.0 (https://github.com/ardianryan/papermc-skill)'
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`PaperMC API returned status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const versionGroups = Object.keys(data.versions || {});
+
+    if (versionGroups.length === 0) {
+      console.log(`${c.yellow}No version groups returned by PaperMC API.${c.reset}`);
+      return;
+    }
+
+    console.log(`${c.green}${c.bold}✔ Successfully queried PaperMC Fill v3 API${c.reset}\n`);
+    console.log(`${c.bold}Available Major Version Groups:${c.reset} ${versionGroups.slice(0, 5).join(', ')}`);
+
+    // Candidate group (latest supported group)
+    const candidateGroup = versionGroups[0];
+    const latestVersions = data.versions[candidateGroup] || [];
+    const latestVersionId = latestVersions[0] || candidateGroup;
+
+    // Fetch details for candidate version
+    const verRes = await fetch(`https://fill.papermc.io/v3/projects/paper/versions/${latestVersionId}`, {
+      headers: {
+        'User-Agent': 'papermc-skill/1.0.0 (https://github.com/ardianryan/papermc-skill)'
+      }
+    });
+
+    let verData = null;
+    if (verRes.ok) {
+      verData = await verRes.json();
+    }
+
+    const latestBuild = verData?.builds?.[0] || 'latest';
+    const status = verData?.version?.support?.status || 'UNKNOWN';
+    const minJava = verData?.version?.java?.version?.minimum || 21;
+
+    console.log(`\n${c.cyan}${c.bold}Latest PaperMC Release Info:${c.reset}`);
+    console.log(`  Version:      ${c.green}${c.bold}${latestVersionId}${c.reset}`);
+    console.log(`  Latest Build: ${c.yellow}#${latestBuild}${c.reset}`);
+    console.log(`  Support:      ${status === 'SUPPORTED' ? c.green : c.gray}${status}${c.reset}`);
+    console.log(`  Minimum Java: ${c.bold}Java ${minJava}+${c.reset}\n`);
+
+    // Check template version
+    const templateBuildGradle = path.join(ROOT_DIR, 'templates', 'paper-modern-template', 'build.gradle.kts');
+    if (fs.existsSync(templateBuildGradle)) {
+      const content = fs.readFileSync(templateBuildGradle, 'utf-8');
+      const match = content.match(/paper-api:([0-9.]+)-R0\.1-SNAPSHOT/);
+      const currentConfigured = match ? match[1] : 'unknown';
+      console.log(`Starter Template Current Version: ${c.bold}${currentConfigured}${c.reset}`);
+
+      if (currentConfigured !== latestVersionId && options.includes('--apply')) {
+        console.log(`\n${c.yellow}Applying update to templates/paper-modern-template...${c.reset}`);
+        let updated = content.replaceAll(currentConfigured, latestVersionId);
+        fs.writeFileSync(templateBuildGradle, updated, 'utf-8');
+
+        // Update paper-plugin.yml
+        const pluginYamlPath = path.join(ROOT_DIR, 'templates', 'paper-modern-template', 'src', 'main', 'resources', 'paper-plugin.yml');
+        if (fs.existsSync(pluginYamlPath)) {
+          let yml = fs.readFileSync(pluginYamlPath, 'utf-8');
+          const major = latestVersionId.split('.').slice(0, 2).join('.');
+          yml = yml.replace(/api-version:\s*['"][^'"]+['"]/, `api-version: '${major}'`);
+          fs.writeFileSync(pluginYamlPath, yml, 'utf-8');
+        }
+        console.log(`${c.green}${c.bold}✔ Updated starter template to ${latestVersionId}!${c.reset}`);
+      } else if (currentConfigured !== latestVersionId) {
+        console.log(`${c.dim}Run 'npx papermc-skill check-update --apply' to update template automatically.${c.reset}`);
+      } else {
+        console.log(`${c.green}Starter template is already up to date!${c.reset}`);
+      }
+    }
+  } catch (err) {
+    console.error(`${c.red}Failed to check PaperMC update:${c.reset}`, err.message);
+  }
+}
+
 function printHelp() {
   printBanner();
   console.log(`${c.bold}Usage:${c.reset}
@@ -244,6 +330,7 @@ function printHelp() {
 
 ${c.bold}Commands:${c.reset}
   ${c.cyan}create [name]${c.reset} / ${c.cyan}init [name]${c.reset}   Scaffold a modern Paper & Folia plugin project
+  ${c.cyan}check-update [--apply]${c.reset}        Query PaperMC Fill API for new Minecraft & Paper releases
   ${c.cyan}install-skill [--global]${c.reset}     Install the AI skill into workspace (.agents) or global (~/.gemini)
   ${c.cyan}docs [number|keyword]${c.reset}        Browse or print documentation guides
   ${c.cyan}help${c.reset} / ${c.cyan}--help${c.reset}                Display this help screen
@@ -252,6 +339,9 @@ ${c.bold}Commands:${c.reset}
 ${c.bold}Examples:${c.reset}
   ${c.dim}# Create a new Paper plugin in current directory${c.reset}
   npx papermc-skill create MyAwesomePlugin
+
+  ${c.dim}# Check if there is a new Minecraft/Paper update from PaperMC API${c.reset}
+  npx papermc-skill check-update
 
   ${c.dim}# Install AI skill globally for your coding agent${c.reset}
   npx papermc-skill install-skill --global
@@ -271,6 +361,10 @@ async function main() {
     case 'init':
     case 'new':
       await handleCreate(args[1]);
+      break;
+    case 'check-update':
+    case 'update':
+      await handleCheckUpdate(args.slice(1));
       break;
     case 'install-skill':
     case 'install':

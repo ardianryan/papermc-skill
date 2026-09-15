@@ -24,6 +24,9 @@ Skill ini memberikan panduan otoritatif, standar arsitektur modern, dan resep co
 
 Saat diminta membuat fitur atau plugin Paper baru, ikuti urutan berikut:
 
+0. **Pemeriksaan Versi Otomatis (Dynamic Version Discovery)**:
+   - Sebelum memulai scaffolding atau menulis kode baru, periksa rilis terbaru PaperMC & Minecraft via API Fill v3 (`https://fill.papermc.io/v3/projects/paper`) atau jalankan `npx papermc-skill check-update`.
+   - Pastikan proyek menargetkan versi Paper API dan minimum Java SDK yang paling mutakhir.
 1. **Tentukan Manifest (`src/main/resources/paper-plugin.yml`)**:
    - Berikan `folia-supported: true`.
    - Cantumkan `bootstrapper:` jika menggunakan Paper Brigadier Command.

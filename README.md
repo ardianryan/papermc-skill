@@ -46,6 +46,11 @@ To browse architectural cheat sheets directly in your terminal:
 npx papermc-skill docs
 ```
 
+To check for the newest Minecraft & PaperMC releases from the official API:
+```bash
+npx papermc-skill check-update
+```
+
 ---
 
 ## 💎 Why Modern Paper Matters

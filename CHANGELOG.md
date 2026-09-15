@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **PaperMC Fill v3 API Dynamic Version Tracker**:
+  - New CLI command `npx papermc-skill check-update [--apply]` to query `https://fill.papermc.io/v3/projects/paper` for the newest Minecraft & PaperMC versions, builds, and minimum Java requirements.
+  - Automated GitHub Actions workflow (`.github/workflows/paper-updater.yml`) running weekly or on-demand to test and bump Paper versions automatically via Pull Requests.
+  - Dependabot configuration (`.github/dependabot.yml`) for automated dependency monitoring across Gradle, GitHub Actions, and npm.
+  - Dynamic Version Discovery protocol in AI Agent skill (`skills/paper-plugin-dev/SKILL.md`).
+
 ## [1.0.0] - 2026-09-05
 
 ### Added

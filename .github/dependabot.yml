@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Maintain GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Maintain Starter Template Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/templates/paper-modern-template"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "gradle"
+      - "minecraft"
+
+  # Maintain Root NPM CLI dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
