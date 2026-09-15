@@ -25,7 +25,7 @@ java {
 
 dependencies {
     // Standar Utama: Paper API (Kyori Adventure, Folia Schedulers, Brigadier, PDC)
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     // Opsional: Untuk NMS / Mojang mappings internal (aktifkan plugin paperweight di atas jika memakai ini):
     // paperweight.paperDevBundle("1.21.4.build.+")
