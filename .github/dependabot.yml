@@ -18,6 +18,10 @@ updates:
       - "dependencies"
       - "gradle"
       - "minecraft"
+    ignore:
+      # Keep 1.21.x LTS for Java 21; prevent bumping to 26.x which requires Java 25
+      - dependency-name: "io.papermc.paper:paper-api"
+        update-types: ["version-update:semver-major"]
 
   # Maintain Root NPM CLI dependencies
   - package-ecosystem: "npm"
