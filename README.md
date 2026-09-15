@@ -1,14 +1,8 @@
 <div align="center">
 
-```
-  ██████╗  █████╗ ██████╗ ███████╗██████╗ ███╗   ███╗ ██████╗ 
-  ██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗████╗ ████║██╔════╝ 
-  ██████╔╝███████║██████╔╝█████╗  ██████╔╝██╔████╔██║██║      
-  ██╔═══╝ ██╔══██║██╔═══╝ ██╔══╝  ██╔══██╗██║╚██╔╝██║██║      
-  ██║     ██║  ██║██║     ███████╗██║  ██║██║ ╚═╝ ██║╚██████╗ 
-  ╚═╝     ╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ 
-          🎮 THE ULTIMATE PAPER & FOLIA ARSENAL 🎮
-```
+<a href="https://github.com/ardianryan/papermc-skill">
+  <img src="assets/banner.svg" alt="PaperMC Skill - The Ultimate Paper & Folia Arsenal" width="100%" />
+</a>
 
 # ⚔️ PAPERMC PLUGIN SKILL & KNOWLEDGE BASE ⚔️
 
