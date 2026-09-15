@@ -135,7 +135,7 @@ When pair-programming with AI coding agents:
 | :--- | :--- | :--- |
 | **NPM Global** | `npx papermc-skill` | [![NPM Version](https://img.shields.io/npm/v/papermc-skill?color=CB3837)](https://www.npmjs.com/package/papermc-skill) |
 | **GitHub Packages** | `@ardianryan/papermc-skill` | [GitHub Packages Hub](https://github.com/users/ardianryan/packages?repo_name=papermc-skill) |
-| **Release Asset** | `papermc-skill-v1.0.0.zip` | [Latest GitHub Release](https://github.com/ardianryan/papermc-skill/releases/latest) |
+| **Release Asset** | `papermc-skill-v1.0.1.zip` | [Latest GitHub Release](https://github.com/ardianryan/papermc-skill/releases/latest) |
 
 ---
 

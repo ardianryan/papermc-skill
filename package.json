@@ -1,6 +1,6 @@
 {
   "name": "papermc-skill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive CLI and architectural development skill for modern Paper & Folia Minecraft Java plugins",
   "main": "bin/cli.js",
   "bin": {

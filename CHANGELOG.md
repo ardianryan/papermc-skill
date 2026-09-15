@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] - 2026-09-15
 
 ### Added
 - **PaperMC Fill v3 API Dynamic Version Tracker**:
@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automated GitHub Actions workflow (`.github/workflows/paper-updater.yml`) running weekly or on-demand to test and bump Paper versions automatically via Pull Requests.
   - Dependabot configuration (`.github/dependabot.yml`) for automated dependency monitoring across Gradle, GitHub Actions, and npm.
   - Dynamic Version Discovery protocol in AI Agent skill (`skills/paper-plugin-dev/SKILL.md`).
+- **Gaming & Hype Aesthetic Overhaul**:
+  - Retro ASCII Art header banner, badges, and high-energy developer quotes in `README.md` and GitHub Release notes.
+
+### Changed
+- **Dependency Upgrades**:
+  - Bumped `io.papermc.paper:paper-api` from `1.21.4` to latest Minecraft 1.21 LTS release `1.21.11-R0.1-SNAPSHOT`.
+  - Bumped Gradle Wrapper from `9.4.1` to `9.7.1`.
+  - Bumped `xyz.jpenilla.run-paper` from `3.0.2` to `3.1.0`.
+  - Bumped `org.jspecify` from `1.0.0` to `1.0.1`.
+  - Upgraded GitHub Actions to latest major versions (`actions/checkout@v7`, `actions/setup-java@v6`, `actions/setup-node@v7`, `softprops/action-gh-release@v3`, `peter-evans/create-pull-request@v8`).
+- **Build Stabilization**:
+  - Added `pluginManagement` with `mavenCentral()` to `settings.gradle.kts` for reliable Gradle plugin dependency resolution.
+  - Configured Dependabot ignore rules to keep `paper-api` on Java 21 LTS compatibility.
 
 ## [1.0.0] - 2026-09-05
 
