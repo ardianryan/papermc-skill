@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/ardianryan/papermc-skill">
-  <img src="https://raw.githubusercontent.com/ardianryan/papermc-skill/main/assets/banner.svg" alt="PaperMC Skill - The Ultimate Paper &amp; Folia Arsenal" width="100%" />
+  <img src="https://raw.githubusercontent.com/ardianryan/papermc-skill/main/assets/banner-animated.svg" alt="PaperMC Skill - The Ultimate Paper &amp; Folia Arsenal" width="100%" />
 </a>
 
 # ⚔️ PAPERMC PLUGIN SKILL & KNOWLEDGE BASE ⚔️

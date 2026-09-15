@@ -1,0 +1,360 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 320" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d17" />
+      <stop offset="45%" stop-color="#101524" />
+      <stop offset="75%" stop-color="#141a2e" />
+      <stop offset="100%" stop-color="#090c15" />
+    </linearGradient>
+
+    <!-- Title Cyan Gradients -->
+    <linearGradient id="titleCyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#affaff" />
+      <stop offset="30%" stop-color="#38d9ff" />
+      <stop offset="70%" stop-color="#00a3ff" />
+      <stop offset="100%" stop-color="#0055b3" />
+    </linearGradient>
+
+    <linearGradient id="titleCyanGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0ffff" />
+      <stop offset="100%" stop-color="#00bfff" />
+    </linearGradient>
+
+    <!-- Portal & Beacon Radial Glow -->
+    <radialGradient id="portalCenterGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#9d4edd" stop-opacity="0.25" />
+      <stop offset="40%" stop-color="#38d9ff" stop-opacity="0.15" />
+      <stop offset="75%" stop-color="#101524" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#101524" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="beaconBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38d9ff" stop-opacity="0" />
+      <stop offset="50%" stop-color="#38d9ff" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#9d4edd" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Drop Shadow / Glow Filters -->
+    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="softAura" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="pixelShadow">
+      <feDropShadow dx="3" dy="4" stdDeviation="0" flood-color="#020408" flood-opacity="0.95" />
+    </filter>
+
+    <!-- Minecraft Grid Texture Pattern -->
+    <pattern id="mcGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect width="24" height="24" fill="none" />
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#ffffff" stroke-width="0.75" stroke-opacity="0.03" />
+      <rect x="11" y="11" width="2" height="2" fill="#ffffff" fill-opacity="0.035" />
+    </pattern>
+  </defs>
+
+  <style>
+    <![CDATA[
+    /* CSS Animations */
+    @keyframes float-sword {
+      0%, 100% { transform: translateY(0px) rotate(-16deg); }
+      50% { transform: translateY(-14px) rotate(-12deg); }
+    }
+    @keyframes float-apple {
+      0%, 100% { transform: translateY(0px) rotate(10deg); }
+      50% { transform: translateY(-12px) rotate(14deg); }
+    }
+    @keyframes xp-drift {
+      0% { transform: translateY(0px); opacity: 0; }
+      25% { opacity: 0.9; }
+      80% { opacity: 0.8; }
+      100% { transform: translateY(-80px); opacity: 0; }
+    }
+    @keyframes star-flicker {
+      0%, 100% { opacity: 0.2; transform: scale(0.7); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+    @keyframes radar-pulse {
+      0% { r: 4; opacity: 1; stroke-width: 2; }
+      100% { r: 13; opacity: 0; stroke-width: 0.5; }
+    }
+
+    .sword-group {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: float-sword 4.5s ease-in-out infinite;
+    }
+    .apple-group {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: float-apple 5s ease-in-out infinite;
+    }
+    .xp-drift-1 { animation: xp-drift 3.6s ease-in-out infinite; }
+    .xp-drift-2 { animation: xp-drift 4.4s ease-in-out infinite 1.2s; }
+    .xp-drift-3 { animation: xp-drift 5.0s ease-in-out infinite 2.2s; }
+    .xp-drift-4 { animation: xp-drift 3.8s ease-in-out infinite 0.7s; }
+
+    .star-1 { transform-origin: center; animation: star-flicker 2.2s ease-in-out infinite; }
+    .star-2 { transform-origin: center; animation: star-flicker 3.0s ease-in-out infinite 0.8s; }
+    .star-3 { transform-origin: center; animation: star-flicker 2.6s ease-in-out infinite 1.5s; }
+
+    .radar-pulse-anim { animation: radar-pulse 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite; }
+
+    .mc-header-font {
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+    ]]>
+  </style>
+
+  <!-- Frame Background & Border -->
+  <rect x="2" y="2" width="996" height="316" rx="14" fill="url(#bgGrad)" stroke="#222b40" stroke-width="3" />
+  <rect x="6" y="6" width="988" height="308" rx="10" fill="none" stroke="#141a29" stroke-width="2" />
+  
+  <!-- Subtle Minecraft Grid -->
+  <rect x="8" y="8" width="984" height="304" rx="8" fill="url(#mcGrid)" />
+
+  <!-- Center Ambient Beacon Aura -->
+  <ellipse cx="500" cy="140" rx="380" ry="130" fill="url(#portalCenterGlow)" />
+  <rect x="410" y="8" width="180" height="304" fill="url(#beaconBeam)" opacity="0.6">
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="4s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Minecraft Bedrock / Obsidian Corner Accents -->
+  <!-- Top Left -->
+  <path d="M 8 36 L 36 8 L 60 8 L 8 60 Z" fill="#2d344d" opacity="0.6" />
+  <rect x="14" y="14" width="7" height="7" fill="#00f0ff" opacity="0.85" />
+  <rect x="23" y="14" width="5" height="5" fill="#55ff55" opacity="0.75" />
+  <!-- Top Right -->
+  <path d="M 992 36 L 964 8 L 940 8 L 992 60 Z" fill="#2d344d" opacity="0.6" />
+  <rect x="979" y="14" width="7" height="7" fill="#00f0ff" opacity="0.85" />
+  <rect x="972" y="14" width="5" height="5" fill="#ffaa00" opacity="0.75" />
+  <!-- Bottom Left -->
+  <path d="M 8 284 L 36 312 L 60 312 L 8 260 Z" fill="#2d344d" opacity="0.6" />
+  <!-- Bottom Right -->
+  <path d="M 992 284 L 964 312 L 940 312 L 992 260 Z" fill="#2d344d" opacity="0.6" />
+
+  <!-- Twinkling Critical Hit Stars / Sparkles -->
+  <g transform="translate(180, 52)" class="star-1">
+    <path d="M 0 -8 L 2.5 -2.5 L 8 0 L 2.5 2.5 L 0 8 L -2.5 2.5 L -8 0 L -2.5 -2.5 Z" fill="#55ffff" />
+    <animateTransform attributeName="transform" type="scale" values="0.7;1.3;0.7" dur="2.2s" repeatCount="indefinite" />
+  </g>
+  <g transform="translate(830, 58)" class="star-2">
+    <path d="M 0 -7 L 2 -2 L 7 0 L 2 2 L 0 7 L -2 2 L -7 0 L -2 -2 Z" fill="#ffff55" />
+    <animateTransform attributeName="transform" type="scale" values="0.8;1.4;0.8" dur="3.0s" repeatCount="indefinite" begin="0.8s" />
+  </g>
+  <g transform="translate(310, 36)" class="star-3">
+    <path d="M 0 -5 L 1.5 -1.5 L 5 0 L 1.5 1.5 L 0 5 L -1.5 1.5 L -5 0 L -1.5 -1.5 Z" fill="#ff55ff" />
+    <animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="2.6s" repeatCount="indefinite" begin="1.5s" />
+  </g>
+  <g transform="translate(690, 44)" class="star-1">
+    <path d="M 0 -5 L 1.5 -1.5 L 5 0 L 1.5 1.5 L 0 5 L -1.5 1.5 L -5 0 L -1.5 -1.5 Z" fill="#55ff55" />
+  </g>
+
+  <!-- Drifting Minecraft XP Orbs & Redstone Dust with SMIL Fallback -->
+  <g transform="translate(250, 240)" class="xp-drift-1">
+    <rect x="-4" y="-4" width="8" height="8" rx="2" fill="#55ff55" stroke="#00aa00" stroke-width="1.5" />
+    <rect x="-1" y="-1" width="3" height="3" fill="#ffffff" />
+    <animateTransform attributeName="transform" type="translate" values="250,240; 250,165" dur="3.6s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0;0.9;0.8;0" dur="3.6s" repeatCount="indefinite" />
+  </g>
+  <g transform="translate(740, 230)" class="xp-drift-2">
+    <rect x="-3" y="-3" width="6" height="6" rx="1.5" fill="#55ffff" stroke="#00aaaa" stroke-width="1.5" />
+    <rect x="-1" y="-1" width="2" height="2" fill="#ffffff" />
+    <animateTransform attributeName="transform" type="translate" values="740,230; 740,150" dur="4.4s" repeatCount="indefinite" begin="1.2s" />
+    <animate attributeName="opacity" values="0;0.9;0.7;0" dur="4.4s" repeatCount="indefinite" begin="1.2s" />
+  </g>
+  <g transform="translate(200, 210)" class="xp-drift-3">
+    <rect x="-3" y="-3" width="6" height="6" fill="#ff4d4d" stroke="#990000" stroke-width="1" />
+    <animateTransform attributeName="transform" type="translate" values="200,210; 200,135" dur="5.0s" repeatCount="indefinite" begin="2.2s" />
+    <animate attributeName="opacity" values="0;0.85;0.6;0" dur="5.0s" repeatCount="indefinite" begin="2.2s" />
+  </g>
+  <g transform="translate(790, 250)" class="xp-drift-4">
+    <rect x="-4" y="-4" width="8" height="8" rx="2" fill="#ffea55" stroke="#d48800" stroke-width="1.5" />
+    <animateTransform attributeName="transform" type="translate" values="790,250; 790,175" dur="3.8s" repeatCount="indefinite" begin="0.7s" />
+    <animate attributeName="opacity" values="0;0.9;0.7;0" dur="3.8s" repeatCount="indefinite" begin="0.7s" />
+  </g>
+
+  <!-- ================= LEFT: PIXEL ART DIAMOND SWORD (ANIMATED) ================= -->
+  <g transform="translate(95, 140)">
+    <g class="sword-group">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-14; 0,0" dur="4.5s" repeatCount="indefinite" />
+      
+      <!-- Aura Glow -->
+      <circle cx="0" cy="0" r="48" fill="#00f0ff" opacity="0.08" filter="url(#softAura)" />
+      <circle cx="0" cy="0" r="44" fill="none" stroke="#00f0ff" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.35" />
+
+      <!-- Pixel Art Sword Body (Centered and Scaled) -->
+      <g transform="scale(3.4) translate(-10, -10)" filter="url(#pixelShadow)">
+        <!-- Blade Outer Edge / Highlights -->
+        <rect x="18" y="2" width="2" height="2" fill="#ffffff" />
+        <rect x="17" y="3" width="2" height="2" fill="#7bf5ff" />
+        <rect x="16" y="4" width="2" height="2" fill="#2de2e6" />
+        <rect x="15" y="5" width="2" height="2" fill="#ffffff" />
+        <rect x="14" y="6" width="2" height="2" fill="#7bf5ff" />
+        <rect x="13" y="7" width="2" height="2" fill="#2de2e6" />
+        <rect x="12" y="8" width="2" height="2" fill="#ffffff" />
+        <rect x="11" y="9" width="2" height="2" fill="#7bf5ff" />
+        <rect x="10" y="10" width="2" height="2" fill="#2de2e6" />
+        <rect x="9" y="11" width="2" height="2" fill="#ffffff" />
+        <rect x="8" y="12" width="2" height="2" fill="#7bf5ff" />
+        <rect x="7" y="13" width="2" height="2" fill="#2de2e6" />
+
+        <!-- Inner Blade Shading (Diamond Core) -->
+        <rect x="18" y="3" width="2" height="2" fill="#2de2e6" />
+        <rect x="17" y="4" width="2" height="2" fill="#0099bb" />
+        <rect x="15" y="6" width="2" height="2" fill="#0099bb" />
+        <rect x="14" y="7" width="2" height="2" fill="#006688" />
+        <rect x="12" y="9" width="2" height="2" fill="#0099bb" />
+        <rect x="11" y="10" width="2" height="2" fill="#006688" />
+        <rect x="9" y="12" width="2" height="2" fill="#0099bb" />
+        <rect x="8" y="13" width="2" height="2" fill="#006688" />
+
+        <!-- Sword Guard / Crossguard (Obsidian & Gold) -->
+        <rect x="6" y="13" width="2" height="2" fill="#3c3f41" />
+        <rect x="7" y="14" width="2" height="2" fill="#ffaa00" />
+        <rect x="8" y="14" width="2" height="2" fill="#3c3f41" />
+        <rect x="9" y="15" width="2" height="2" fill="#ffaa00" />
+        <rect x="5" y="14" width="2" height="2" fill="#27292a" />
+        <rect x="6" y="15" width="2" height="2" fill="#3c3f41" />
+        <rect x="9" y="13" width="2" height="2" fill="#27292a" />
+        <rect x="10" y="14" width="2" height="2" fill="#3c3f41" />
+
+        <!-- Sword Handle (Wood Oak) -->
+        <rect x="5" y="16" width="2" height="2" fill="#8b5a2b" />
+        <rect x="4" y="17" width="2" height="2" fill="#6d421e" />
+
+        <!-- Pommel (Obsidian) -->
+        <rect x="3" y="18" width="2" height="2" fill="#27292a" />
+        <rect x="2" y="19" width="2" height="2" fill="#3c3f41" />
+      </g>
+    </g>
+  </g>
+
+  <!-- ================= RIGHT: PIXEL ART ENCHANTED APPLE / ORB (ANIMATED) ================= -->
+  <g transform="translate(895, 140)">
+    <g class="apple-group">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-12; 0,0" dur="5s" repeatCount="indefinite" />
+      
+      <!-- Enchantment Halo -->
+      <ellipse cx="0" cy="0" rx="46" ry="20" fill="none" stroke="#c77dff" stroke-width="2" stroke-dasharray="8,4" opacity="0.65" />
+      <circle cx="0" cy="0" r="38" fill="#c77dff" opacity="0.1" filter="url(#softAura)" />
+
+      <!-- Apple Pixel Art -->
+      <g transform="scale(3.2) translate(-11, -10)" filter="url(#pixelShadow)">
+        <!-- Stem & Leaf -->
+        <rect x="11" y="3" width="2" height="3" fill="#8b5a2b" />
+        <rect x="13" y="2" width="2" height="2" fill="#55ff55" />
+        
+        <!-- Apple Body -->
+        <rect x="8" y="6" width="8" height="10" rx="1" fill="#ffaa00" />
+        <rect x="6" y="8" width="12" height="7" rx="1" fill="#ffaa00" />
+        <!-- Shiny Highlights -->
+        <rect x="7" y="7" width="4" height="4" fill="#ffff55" />
+        <rect x="7" y="7" width="2" height="2" fill="#ffffff" />
+        
+        <!-- Shading & Outline -->
+        <rect x="7" y="14" width="10" height="2" fill="#cc7700" />
+        <rect x="8" y="15" width="8" height="1" fill="#884400" />
+        <rect x="5" y="9" width="1" height="5" fill="#884400" />
+        <rect x="18" y="9" width="1" height="5" fill="#884400" />
+      </g>
+    </g>
+  </g>
+
+  <!-- ================= CENTER: BRAND & TYPOGRAPHY ================= -->
+  <!-- Top Category Pill -->
+  <g transform="translate(500, 48)">
+    <rect x="-165" y="-14" width="330" height="28" rx="14" fill="#131929" stroke="#2b3754" stroke-width="1.5" />
+    <text x="0" y="5" text-anchor="middle" fill="#00d2ff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="800" letter-spacing="2.5">
+      MINECRAFT JAVA ARCHITECTURE
+    </text>
+  </g>
+
+  <!-- Main 3D Title: PAPERMC SKILL -->
+  <!-- Bevel Shadow 1 -->
+  <text x="502" y="127" text-anchor="middle" class="mc-header-font" font-size="56" fill="#040b17" opacity="0.95">
+    PAPERMC SKILL
+  </text>
+  <!-- Bevel Shadow 2 -->
+  <text x="500" y="125" text-anchor="middle" class="mc-header-font" font-size="56" fill="#0a3150">
+    PAPERMC SKILL
+  </text>
+  <!-- Main Glowing Gradient Text -->
+  <text x="500" y="122" text-anchor="middle" class="mc-header-font" font-size="56" fill="url(#titleCyan)" filter="url(#textGlow)">
+    PAPERMC SKILL
+  </text>
+  <text x="500" y="122" text-anchor="middle" class="mc-header-font" font-size="56" fill="url(#titleCyan)">
+    PAPERMC SKILL
+  </text>
+
+  <!-- High-Energy Tagline -->
+  <text x="500" y="165" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Minecraft', sans-serif" font-size="16" font-weight="700" fill="#e2e8f0" letter-spacing="1.2">
+    ⚔️ NEXT-GEN MINECRAFT PLUGIN ARSENAL • FOLIA READY • JAVA 21+ ⚔️
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(500, 206)">
+    <!-- Pill 1: Paper 1.21.11 -->
+    <g transform="translate(-235, 0)">
+      <rect x="-65" y="-12" width="130" height="24" rx="6" fill="#0c1d2e" stroke="#00aaff" stroke-width="1" />
+      <text x="0" y="4" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" fill="#7bf5ff">
+        ⚡ PAPER 1.21+
+      </text>
+    </g>
+
+    <!-- Pill 2: Folia Multithreaded -->
+    <g transform="translate(-80, 0)">
+      <rect x="-70" y="-12" width="140" height="24" rx="6" fill="#1b1233" stroke="#9d4edd" stroke-width="1" />
+      <text x="0" y="4" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" fill="#d8b4fe">
+        🌌 FOLIA NATIVE
+      </text>
+    </g>
+
+    <!-- Pill 3: Fill v3 Auto-Updater -->
+    <g transform="translate(80, 0)">
+      <rect x="-70" y="-12" width="140" height="24" rx="6" fill="#1c1f10" stroke="#55ff55" stroke-width="1" />
+      <text x="0" y="4" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" fill="#86efac">
+        🔄 FILL V3 TRACKER
+      </text>
+    </g>
+
+    <!-- Pill 4: Zero Tech-Debt -->
+    <g transform="translate(235, 0)">
+      <rect x="-65" y="-12" width="130" height="24" rx="6" fill="#241708" stroke="#ffaa00" stroke-width="1" />
+      <text x="0" y="4" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" fill="#fde047">
+        🛡️ ZERO TECH-DEBT
+      </text>
+    </g>
+  </g>
+
+  <!-- Bottom Terminal Status Bar -->
+  <g transform="translate(500, 274)">
+    <rect x="-310" y="-17" width="620" height="34" rx="8" fill="#080a10" stroke="#1c2336" stroke-width="1.5" />
+    
+    <!-- Radar Live Ping Circle (CSS + SMIL) -->
+    <g transform="translate(-280, 0)">
+      <circle class="radar-pulse-anim" cx="0" cy="0" r="4" fill="none" stroke="#22c55e">
+        <animate attributeName="r" values="4;13" dur="1.8s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;0" dur="1.8s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="0" cy="0" r="4" fill="#22c55e" />
+    </g>
+
+    <text x="-260" y="4" font-family="'Courier New', Courier, monospace" font-size="13" font-weight="700" fill="#22c55e">
+      SYS_READY:
+    </text>
+    <text x="-165" y="4" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="600" fill="#94a3b8">
+      LATEST ENGINE <tspan fill="#38d9ff">v1.0.1</tspan> | BUILD <tspan fill="#f59e0b">GRADLE 9.7.1</tspan> | JAVA <tspan fill="#e2e8f0">21 LTS</tspan>
+    </text>
+    <text x="275" y="4" text-anchor="end" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="700" fill="#00d2ff">
+      [LIVE]
+    </text>
+  </g>
+</svg>
