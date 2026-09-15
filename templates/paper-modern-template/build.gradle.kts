@@ -1,7 +1,7 @@
 plugins {
     `java-library`
     // Plugin run-paper untuk menjalankan test server Paper/Folia instan
-    id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
     
     // Aktifkan paperweight.userdev jika butuh Mojang NMS internals
     // id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
