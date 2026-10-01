@@ -351,7 +351,7 @@
       SYS_READY:
     </text>
     <text x="-165" y="4" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="600" fill="#94a3b8">
-      LATEST ENGINE <tspan fill="#38d9ff">v1.0.1</tspan> | BUILD <tspan fill="#f59e0b">GRADLE 9.7.1</tspan> | JAVA <tspan fill="#e2e8f0">21 LTS</tspan>
+      LATEST ENGINE <tspan fill="#38d9ff">v1.1.0</tspan> | BUILD <tspan fill="#f59e0b">GRADLE 9.7.1</tspan> | JAVA <tspan fill="#e2e8f0">21 LTS</tspan>
     </text>
     <text x="275" y="4" text-anchor="end" font-family="'Courier New', Courier, monospace" font-size="12" font-weight="700" fill="#00d2ff">
       [LIVE]

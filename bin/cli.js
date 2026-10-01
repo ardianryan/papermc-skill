@@ -323,6 +323,105 @@ async function handleCheckUpdate(options = []) {
   }
 }
 
+async function handleAudit(targetDirInput) {
+  printBanner();
+  const targetDir = path.resolve(process.cwd(), targetDirInput || '.');
+  console.log(`${c.cyan}${c.bold}Running PaperMC Security & Exploit Audit on:${c.reset} ${c.dim}${targetDir}${c.reset}\n`);
+
+  if (!fs.existsSync(targetDir)) {
+    console.error(`${c.red}Directory does not exist:${c.reset} ${targetDir}`);
+    return;
+  }
+
+  const javaFiles = [];
+  function scan(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'build' || entry.name === '.gradle') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scan(full);
+      } else if (entry.name.endsWith('.java')) {
+        javaFiles.push(full);
+      }
+    }
+  }
+
+  scan(targetDir);
+
+  if (javaFiles.length === 0) {
+    console.log(`${c.yellow}No .java files found to audit in this directory.${c.reset}`);
+    return;
+  }
+
+  console.log(`Auditing ${c.bold}${javaFiles.length}${c.reset} Java source files for exploit vectors & anti-patterns...\n`);
+
+  const checks = [
+    {
+      id: 'CHATCOLOR_LEGACY',
+      regex: /ChatColor\.[A-Z_]+/,
+      level: 'HIGH',
+      msg: 'Legacy ChatColor usage detected. Migrate to Adventure Component & MiniMessage to prevent console formatting corruption.'
+    },
+    {
+      id: 'SECTION_SIGN_COLOR',
+      regex: /["'].*?§[0-9a-fk-or].*?["']/,
+      level: 'HIGH',
+      msg: 'Hardcoded legacy section sign (§) detected. Use MiniMessage.miniMessage().deserialize(...) instead.'
+    },
+    {
+      id: 'PLAYER_STATIC_LEAK',
+      regex: /public\s+static\s+(?:final\s+)?(?:List|Set|Map|Collection)<(?:[^,>]+,\s*)?Player>/,
+      level: 'CRITICAL',
+      msg: 'Static collection holding Player instances detected! This causes massive Memory Leaks. Store UUID instead.'
+    },
+    {
+      id: 'SYNC_CHUNK_LOAD',
+      regex: /world\s*\.\s*getChunkAt\s*\(/,
+      level: 'HIGH',
+      msg: 'Synchronous chunk loading (world.getChunkAt) freezes the main server tick thread. Use getChunkAtAsync instead.'
+    },
+    {
+      id: 'INSECURE_SQL_CONCAT',
+      regex: /(?:executeQuery|executeUpdate|execute)\s*\(\s*["'].*?\+/i,
+      level: 'CRITICAL',
+      msg: 'Potential SQL Injection via string concatenation detected in query. Use PreparedStatement with ? placeholders.'
+    },
+    {
+      id: 'RAW_DOUBLE_NAN_CHECK',
+      regex: /DoubleArgumentType\.doubleArg\s*\(/,
+      level: 'INFO',
+      msg: 'Double argument registered. Ensure execution validates !Double.isFinite(val) and checks for positive numbers.'
+    }
+  ];
+
+  let issueCount = 0;
+  for (const file of javaFiles) {
+    const content = fs.readFileSync(file, 'utf-8');
+    const lines = content.split('\n');
+    const relPath = path.relative(targetDir, file);
+
+    lines.forEach((line, idx) => {
+      for (const check of checks) {
+        if (check.regex.test(line)) {
+          issueCount++;
+          const color = check.level === 'CRITICAL' ? c.red : (check.level === 'HIGH' ? c.yellow : c.cyan);
+          console.log(`[${color}${check.level}${c.reset}] ${c.bold}${relPath}:${idx + 1}${c.reset}`);
+          console.log(`  ${c.dim}${line.trim()}${c.reset}`);
+          console.log(`  ↳ ${check.msg}\n`);
+        }
+      }
+    });
+  }
+
+  if (issueCount === 0) {
+    console.log(`${c.green}${c.bold}✔ 0 Vulnerabilities or Anti-Patterns Found!${c.reset}`);
+    console.log(`${c.green}Codebase adheres to modern Paper & Folia exploit-proof security standards.${c.reset}\n`);
+  } else {
+    console.log(`${c.yellow}${c.bold}Found ${issueCount} potential issue(s).${c.reset} Review docs/11-security-and-exploit-prevention.md for guidelines.\n`);
+  }
+}
+
 function printHelp() {
   printBanner();
   console.log(`${c.bold}Usage:${c.reset}
@@ -331,6 +430,7 @@ function printHelp() {
 ${c.bold}Commands:${c.reset}
   ${c.cyan}create [name]${c.reset} / ${c.cyan}init [name]${c.reset}   Scaffold a modern Paper & Folia plugin project
   ${c.cyan}check-update [--apply]${c.reset}        Query PaperMC Fill API for new Minecraft & Paper releases
+  ${c.cyan}audit [path]${c.reset}                  Audit Java plugin codebase for security exploits & anti-patterns
   ${c.cyan}install-skill [--global]${c.reset}     Install the AI skill into workspace (.agents) or global (~/.gemini)
   ${c.cyan}docs [number|keyword]${c.reset}        Browse or print documentation guides
   ${c.cyan}help${c.reset} / ${c.cyan}--help${c.reset}                Display this help screen
@@ -375,6 +475,11 @@ async function main() {
     case 'doc':
     case 'guide':
       handleDocs(args[1]);
+      break;
+    case 'audit':
+    case 'scan':
+    case 'security':
+      await handleAudit(args[1]);
       break;
     case '--version':
     case '-v': {

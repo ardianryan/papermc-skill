@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-01
+
+### Added
+- **Plugin Security & Anti-Exploit Scanner CLI (`npx papermc-skill audit [path]`)**:
+  - Scans Java sources for known Bukkit/Paper vulnerabilities including legacy ChatColor usage, section sign formatting bugs, static collection memory leaks (`Set<Player>`), synchronous chunk freezes (`world.getChunkAt`), insecure SQL string concatenation, and unbounded float/double parsing.
+- **Masterclass Guide 11: Security & Exploit Prevention (`docs/11-security-and-exploit-prevention.md`)**:
+  - Deep-dive architectural guide covering item dupe glitch elimination, inventory race conditions, PDC cryptographic tamper-proofing, numeric/economy validation (anti-NaN/overflow), asynchronous chunk loading teleportation, HikariCP connection leak prevention, and memory leak elimination.
+- **Massively Enriched AI Agent Skill (`skills/paper-plugin-dev/SKILL.md`)**:
+  - Added dedicated Security & Exploit-Proofing protocol.
+  - Added production recipes for Secure Brigadier Commands with numeric bounds, Safe GUI Menu Controllers with 200ms click debounce and drag cancellation, Anti-Tamper PDC Item Utilities, Universal Folia/Paper Schedulers, and Async HikariCP Database Managers.
+  - Added 20-point Pre-Release Security Audit Checklist.
+
+### Changed
+- **SchedulerAdapter Precision Hardening**:
+  - Fixed tick conversion in `SchedulerAdapter.java` to use exact millisecond calculation `timeUnit.toMillis(delay) / 50L`.
+- **Documentation & Distribution**:
+  - Added `assets/` to package distribution files for local and offline tooling.
+  - Updated README documentation with Guide 11 and audit quickstart command.
+
 ## [1.0.1] - 2026-09-15
 
 ### Added

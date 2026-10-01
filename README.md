@@ -15,7 +15,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/ardianryan/papermc-skill?style=for-the-badge&color=2ea44f&logo=github&logoColor=white)](https://github.com/ardianryan/papermc-skill/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-44CC11?style=for-the-badge)](LICENSE)
 
-[⚡ Quickstart](#-instant-quickstart-5-seconds) • [💎 Key Features](#-why-modern-paper-matters) • [📚 10 Masterclass Guides](#-10-masterclass-technical-guides) • [🔍 Battle-Tested References](#-cloned-reference-plugins) • [🤖 AI Agent Skill](#-ai-agent-integration)
+[⚡ Quickstart](#-instant-quickstart-5-seconds) • [💎 Key Features](#-why-modern-paper-matters) • [📚 11 Masterclass Guides](#-11-masterclass-technical-guides) • [🔍 Battle-Tested References](#-cloned-reference-plugins) • [🤖 AI Agent Skill](#-ai-agent-integration)
 
 ---
 
@@ -45,6 +45,11 @@ To check for the newest Minecraft & PaperMC releases from the official API:
 npx papermc-skill check-update
 ```
 
+To audit any plugin codebase for exploits, memory leaks, and anti-patterns:
+```bash
+npx papermc-skill audit
+```
+
 ---
 
 ## 💎 Why Modern Paper Matters
@@ -61,7 +66,7 @@ The Minecraft server ecosystem has evolved dramatically. Legacy habits lead to s
 
 ---
 
-## 📚 10 Masterclass Technical Guides
+## 📚 11 Masterclass Technical Guides
 
 Written by developers for developers, covering everything from basic setup to high-throughput concurrency:
 
@@ -77,6 +82,7 @@ Written by developers for developers, covering everything from basic setup to hi
 | **08** | [Modern GUI & Inventory Menus](https://github.com/ardianryan/papermc-skill/blob/main/docs/08-gui-and-menus.md) | Custom `InventoryHolder` menus, PDC interactive buttons, and bulletproof duplication-exploit prevention. |
 | **09** | [Custom Items, Abilities & Combat](https://github.com/ardianryan/papermc-skill/blob/main/docs/09-custom-items-and-combat.md) | Raycasting spells (`rayTraceEntities`), particle beam effects, vanilla visual cooldowns, and SFX. |
 | **10** | [Asynchronous Database Storage](https://github.com/ardianryan/papermc-skill/blob/main/docs/10-database-and-storage.md) | SQLite & MySQL HikariCP connection pooling, thread-safe asynchronous DAO pattern with `CompletableFuture`. |
+| **11** | [Security & Exploit Prevention](https://github.com/ardianryan/papermc-skill/blob/main/docs/11-security-and-exploit-prevention.md) | Eliminating dupe glitches, inventory race conditions, PDC tamper verification, numeric/economy validation, and packet DoS defense. |
 
 ---
 
@@ -129,7 +135,7 @@ When pair-programming with AI coding agents:
 | :--- | :--- | :--- |
 | **NPM Global** | `npx papermc-skill` | [![NPM Version](https://img.shields.io/npm/v/papermc-skill?color=CB3837)](https://www.npmjs.com/package/papermc-skill) |
 | **GitHub Packages** | `@ardianryan/papermc-skill` | [GitHub Packages Hub](https://github.com/users/ardianryan/packages?repo_name=papermc-skill) |
-| **Release Asset** | `papermc-skill-v1.0.1.zip` | [Latest GitHub Release](https://github.com/ardianryan/papermc-skill/releases/latest) |
+| **Release Asset** | `papermc-skill-v1.1.0.zip` | [Latest GitHub Release](https://github.com/ardianryan/papermc-skill/releases/latest) |
 
 ---
 

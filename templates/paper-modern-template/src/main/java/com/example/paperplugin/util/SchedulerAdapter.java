@@ -70,7 +70,7 @@ public final class SchedulerAdapter {
         if (IS_FOLIA) {
             Bukkit.getAsyncScheduler().runDelayed(plugin, task -> runnable.run(), delay, timeUnit);
         } else {
-            final long ticks = delay * 20; // Aproksimasi detik ke tick jika detik
+            final long ticks = Math.max(1L, timeUnit.toMillis(delay) / 50L);
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticks);
         }
     }
