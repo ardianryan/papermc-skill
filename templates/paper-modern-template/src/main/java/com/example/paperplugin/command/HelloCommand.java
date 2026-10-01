@@ -11,8 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-
 public final class HelloCommand {
 
     private HelloCommand() {
@@ -24,7 +22,7 @@ public final class HelloCommand {
             .executes(context -> {
                 final CommandSender sender = context.getSource().getSender();
                 sender.sendMessage(
-                    MiniMessage.miniMessage().deserialize("<green>Halo, <yellow><name></yellow>! Selamat menggunakan Paper Brigadier.</green>",
+                    MiniMessage.miniMessage().deserialize("<green>Hello, <yellow><name></yellow>! Welcome to modern Paper Brigadier.</green>",
                         Placeholder.unparsed("name", sender.getName())
                     )
                 );
@@ -42,7 +40,7 @@ public final class HelloCommand {
                     final String target = StringArgumentType.getString(context, "target");
 
                     sender.sendMessage(
-                        MiniMessage.miniMessage().deserialize("<green>Menyapa <gold><target></gold> atas nama <yellow><sender></yellow>!</green>",
+                        MiniMessage.miniMessage().deserialize("<green>Greetings sent to <gold><target></gold> on behalf of <yellow><sender></yellow>!</green>",
                             Placeholder.unparsed("target", target),
                             Placeholder.unparsed("sender", sender.getName())
                         )

@@ -4,8 +4,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 
 /**
- * Menyimpan konstanta NamespacedKey untuk PersistentDataContainer (PDC).
- * Selalu inisialisasi satu kali untuk menghindari alokasi objek berulang.
+ * Stores static NamespacedKey identifiers for PersistentDataContainer (PDC).
+ * Always initialized once on plugin startup to eliminate repeated heap allocations.
  */
 public final class PluginDataKeys {
 

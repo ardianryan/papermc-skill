@@ -1,25 +1,25 @@
-# Pembuatan GUI / Menu Inventory Modern di Paper
+# Modern GUI & Inventory Menus in Paper
 
-Membuat antarmuka interaktif (GUI Menu) menggunakan inventaris chest adalah salah satu fitur paling sering dibuat di plugin Minecraft. Pendekatan lama yang memeriksa judul GUI dengan string berwarna (`ChatColor.stripColor`) atau mencocokkan nomor slot sangat rapuh dan rawan bug duplikasi item.
+Creating interactive inventory interfaces (GUI Menus) using chest containers is one of the most widely implemented features in Minecraft plugins. Legacy approaches inspecting menu titles with color strings (`ChatColor.stripColor`) or hardcoding slot numbers (`event.getSlot() == 13`) are brittle and notorious for causing item duplication exploits.
 
-Paper modern menawarkan cara yang jauh lebih aman, bersih, dan type-safe menggunakan **Kyori Adventure** dan **PersistentDataContainer (PDC)**.
+Modern Paper offers a clean, type-safe, and exploit-proof pattern utilizing **Kyori Adventure** and **PersistentDataContainer (PDC)**.
 
 ---
 
-## 1. Masalah pada Pendekatan Lama vs Solusi Modern
+## 1. Legacy Anti-Patterns vs Modern Paper Solutions
 
-| Masalah Legacy (Lama) | Solusi Modern Paper |
+| Legacy Spigot Anti-Pattern | Modern Paper Architecture |
 | :--- | :--- |
-| Memeriksa judul menu dengan `event.getView().getTitle().equals("§8Menu")` | Memeriksa `InventoryHolder` kustom atau PDC metadata pada item. |
-| Mencocokkan fungsi tombol berdasarkan `event.getSlot() == 13` | Menandai tombol dengan `PDC` (`NamespacedKey: "gui_action" -> "buy_item"`). |
-| Merusak format warna teks jika ada reload atau translate | Menggunakan Adventure `Component` untuk title inventaris. |
-| Rawan bug eksploitasi duplikasi jika `event.setCancelled(true)` luput | Selalu batalkan event jika holder terverifikasi sebagai custom GUI. |
+| Matching title strings: `view.getTitle().equals("§8Menu")` | Verifying custom `InventoryHolder` or PDC item signatures. |
+| Hardcoding actions: `if (event.getSlot() == 13)` | Tagging button items with PDC actions (`gui_action -> buy_item`). |
+| Corrupting color formatting across reloads | Using Adventure `Component` titles natively. |
+| Item duplication exploits when cancel fails | Enforcing immediate cancellation on verified custom holders. |
 
 ---
 
-## 2. Pola Custom `InventoryHolder`
+## 2. The Custom `InventoryHolder` Pattern
 
-Cara paling handal dan standar industri untuk mengenali GUI buatan plugin Anda adalah membuat kelas yang mengimplementasikan `InventoryHolder`:
+The industry standard for identifying plugin-owned GUIs is implementing a custom `InventoryHolder`:
 
 ```java
 package com.example.plugin.gui;
@@ -37,7 +37,7 @@ public class CustomMenuHolder implements InventoryHolder {
 
     public CustomMenuHolder(Component title, int rows, String menuId) {
         this.menuId = menuId;
-        // Bukkit.createInventory mendukung Adventure Component secara native di Paper
+        // Bukkit.createInventory natively accepts Adventure Components in Paper
         this.inventory = Bukkit.createInventory(this, rows * 9, title);
     }
 
@@ -54,9 +54,9 @@ public class CustomMenuHolder implements InventoryHolder {
 
 ---
 
-## 3. Membuat Tombol dengan Penanda PDC
+## 3. Creating Interactive Buttons with PDC Tags
 
-Daripada mengingat nomor slot, tandai setiap item tombol dengan aksi spesifik di `PersistentDataContainer`:
+Rather than remembering slot indices, tag each button item with an action identifier inside `PersistentDataContainer`:
 
 ```java
 package com.example.plugin.gui;
@@ -67,7 +67,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 
@@ -77,8 +76,7 @@ public final class GuiItemBuilder {
 
     public static ItemStack createButton(Material material, String nameMiniMessage, List<String> loreMiniMessage, String actionId) {
         ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
+        item.editMeta(meta -> {
             meta.displayName(MiniMessage.miniMessage().deserialize(nameMiniMessage));
             
             meta.lore(loreMiniMessage.stream()
@@ -86,10 +84,9 @@ public final class GuiItemBuilder {
                 .toList()
             );
 
-            // Tandai tombol dengan ID aksi unik
+            // Tag button with unique action identifier
             meta.getPersistentDataContainer().set(ACTION_KEY, PersistentDataType.STRING, actionId);
-            item.setItemMeta(meta);
-        }
+        });
         return item;
     }
 }
@@ -97,18 +94,18 @@ public final class GuiItemBuilder {
 
 ---
 
-## 4. Merakit Menu
+## 4. Assembling the Menu
 
 ```java
 public void openShopMenu(Player player) {
     CustomMenuHolder holder = new CustomMenuHolder(
-        MiniMessage.miniMessage().deserialize("<gradient:#f12711:#f5af19><bold>Toko Server</bold></gradient>"),
-        3, // 3 baris = 27 slot
+        MiniMessage.miniMessage().deserialize("<gradient:#f12711:#f5af19><bold>Server Market</bold></gradient>"),
+        3, // 3 rows = 27 slots
         "server_shop"
     );
     Inventory inv = holder.getInventory();
 
-    // Border pengisi (filler)
+    // Background glass filler
     ItemStack filler = GuiItemBuilder.createButton(
         Material.GRAY_STAINED_GLASS_PANE,
         "<gray> </gray>",
@@ -119,18 +116,18 @@ public void openShopMenu(Player player) {
         inv.setItem(i, filler);
     }
 
-    // Tombol aksi
+    // Action button
     inv.setItem(11, GuiItemBuilder.createButton(
         Material.DIAMOND_SWORD,
-        "<aqua><bold>Beli Senjata Legendaris</bold></aqua>",
-        List.of("<gray>Harga: <gold>500 Koin</gold></gray>", "<yellow>Klik untuk membeli!</yellow>"),
+        "<aqua><bold>Purchase Legendary Blade</bold></aqua>",
+        List.of("<gray>Price: <gold>500 Coins</gold></gray>", "<yellow>Click to purchase!</yellow>"),
         "buy_sword"
     ));
 
     inv.setItem(15, GuiItemBuilder.createButton(
         Material.BARRIER,
-        "<red><bold>Tutup Menu</bold></red>",
-        List.of("<gray>Klik untuk keluar</gray>"),
+        "<red><bold>Close Menu</bold></red>",
+        List.of("<gray>Click to exit</gray>"),
         "close_menu"
     ));
 
@@ -140,7 +137,7 @@ public void openShopMenu(Player player) {
 
 ---
 
-## 5. Event Listener Menu yang Aman dari Eksploitasi
+## 5. Exploit-Proof Menu Event Listener
 
 ```java
 package com.example.plugin.gui;
@@ -158,15 +155,15 @@ public final class MenuClickListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent event) {
-        // 1. Verifikasi apakah inventory yang diklik adalah custom holder kita
+        // 1. Verify holder instance
         if (!(event.getInventory().getHolder() instanceof CustomMenuHolder holder)) {
             return;
         }
 
-        // 2. SELALU batalkan klik untuk mencegah pemain mengambil/memindahkan item GUI!
+        // 2. ALWAYS cancel to prevent players from moving GUI items!
         event.setCancelled(true);
 
-        // 3. Abaikan jika klik di luar jendela atau slot kosong
+        // 3. Ignore empty slots or clicks outside the window
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || !clickedItem.hasItemMeta()) {
             return;
@@ -176,7 +173,7 @@ public final class MenuClickListener implements Listener {
             return;
         }
 
-        // 4. Baca aksi dari PDC item
+        // 4. Read action from item PDC
         String action = clickedItem.getItemMeta().getPersistentDataContainer()
             .get(GuiItemBuilder.ACTION_KEY, PersistentDataType.STRING);
 
@@ -184,14 +181,14 @@ public final class MenuClickListener implements Listener {
             return;
         }
 
-        // 5. Eksekusi aksi berdasarkan action ID
+        // 5. Execute action routing
         switch (action) {
             case "buy_sword" -> {
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Sukses membeli senjata!</green>"));
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Successfully purchased weapon!</green>"));
                 player.closeInventory();
             }
             case "close_menu" -> player.closeInventory();
-            default -> player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Aksi tidak dikenal.</red>"));
+            default -> player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Unknown menu action.</red>"));
         }
     }
 }

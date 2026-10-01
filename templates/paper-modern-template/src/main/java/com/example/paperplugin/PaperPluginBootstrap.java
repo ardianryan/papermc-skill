@@ -14,14 +14,14 @@ public final class PaperPluginBootstrap implements PluginBootstrap {
 
     @Override
     public void bootstrap(final BootstrapContext context) {
-        // Registrasi Paper Brigadier Commands via LifecycleEvents
+        // Register Paper Brigadier Commands via LifecycleEvents
         context.getLifecycleManager().registerEventHandler(
             LifecycleEvents.COMMANDS,
             event -> {
                 final var registrar = event.registrar();
                 registrar.register(
                     HelloCommand.create(),
-                    "Contoh perintah Paper modern berbasis Brigadier",
+                    "Example modern Paper command powered by Mojang Brigadier",
                     List.of("phello")
                 );
             }

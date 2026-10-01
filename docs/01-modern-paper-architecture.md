@@ -1,55 +1,52 @@
-# Arsitektur Modern Plugin Paper Minecraft Java
+# Modern Minecraft Java Plugin Architecture (Paper & Folia)
 
-Dokumen ini membahas arsitektur modern pembuatan plugin untuk server Paper Minecraft Java (khususnya versi 1.20+ dan 1.21+), mencakup build tools, konfigurasi manifest, lifecycle bootstrapping, dan sistem pemetaan (Mojang mappings).
+This guide explores the modern architectural patterns for building Minecraft Java plugins on PaperMC (specifically versions 1.20+ and 1.21+), covering build tooling, manifest configuration, lifecycle bootstrapping, and native Mojang mappings.
 
 ---
 
-## 1. Evolusi Arsitektur: Spigot vs Modern Paper
+## 1. Architectural Evolution: Legacy Spigot vs Modern Paper
 
-Secara historis, plugin Minecraft dibuat di atas Bukkit/Spigot API dengan `plugin.yml` dan Maven/Gradle sederhana. Namun, ekosistem Paper modern telah merevolusi cara kerja plugin:
+Historically, plugins were built on the Bukkit/Spigot API using `plugin.yml` and straightforward Maven/Gradle configurations. However, modern Paper has revolutionized plugin architecture:
 
-| Fitur | Spigot Legacy | Modern Paper (1.20.6+ / 1.21+) |
+| Feature | Legacy Spigot | Modern Paper (1.20.6+ / 1.21+) |
 | :--- | :--- | :--- |
-| **Manifest File** | `plugin.yml` | `paper-plugin.yml` (atau hybrid) |
-| **Text Handling** | `ChatColor` & legacy string formatting (`§a`) | Kyori Adventure & MiniMessage (`Component`) |
-| **Lifecycle Hook** | Hanya `JavaPlugin.onLoad` & `onEnable` | `PluginBootstrap` + `JavaPlugin` + `LifecycleEvents` |
-| **Command System** | `getCommand("...").setExecutor(...)` | Paper Brigadier Native (`LifecycleEvents.COMMANDS`) atau Cloud |
-| **Mapping NMS** | Obfuscated Spigot mapping (`reobf`) | Mojang Mappings langsung di runtime (1.20.5+) via Paperweight |
-| **Multi-threading** | Single main thread (`BukkitScheduler`) | Multi-thread regionized ready (Folia & Schedulers terpisah) |
+| **Manifest File** | `plugin.yml` | `paper-plugin.yml` (or hybrid) |
+| **Text Handling** | `ChatColor` & legacy formatting (`§a`) | Kyori Adventure & MiniMessage (`Component`) |
+| **Lifecycle Hooks** | Only `JavaPlugin.onLoad` & `onEnable` | `PluginBootstrap` + `JavaPlugin` + `LifecycleEvents` |
+| **Command Engine** | `getCommand("...").setExecutor(...)` | Paper Native Brigadier (`LifecycleEvents.COMMANDS`) or Cloud |
+| **NMS Mappings** | Obfuscated Spigot mappings (`reobf`) | Runtime Mojang Mappings (1.20.5+) via Paperweight |
+| **Multi-Threading** | Single main thread (`BukkitScheduler`) | Multi-threaded region ticking (Folia & region schedulers) |
 
 ---
 
 ## 2. Build Tooling: Gradle & Paperweight Userdev
 
-Standard industri modern untuk proyek Paper adalah **Gradle (Kotlin DSL - `.gradle.kts`)** menggunakan plugin **`paperweight-userdev`** dari PaperMC.
+The modern industry standard for Paper projects is **Gradle (Kotlin DSL - `.gradle.kts`)** using PaperMC's **`paperweight-userdev`** plugin.
 
-### Keunggulan Paperweight Userdev:
-- Menyediakan akses ke **Mojang Mappings (NMS)** langsung tanpa alat deobfuscation eksternal yang rumit.
-- Sejak Paper 1.20.5+, server Paper menjalankan Mojang Mappings secara native di runtime.
-- Terintegrasi dengan plugin `xyz.jpenilla.run-paper` untuk menjalankan test server Paper/Folia langsung dengan satu perintah gradle (`./gradlew runServer`).
+### Key Benefits of Paperweight Userdev:
+- Direct access to **Mojang Mappings (NMS)** without cumbersome external deobfuscation workflows.
+- Starting from Paper 1.20.5+, Paper servers run native Mojang Mappings in production at runtime.
+- Seamless integration with `xyz.jpenilla.run-paper` to launch automated Paper/Folia test servers with a single command (`./gradlew runServer`).
 
-### Contoh `build.gradle.kts`:
+### Example `build.gradle.kts`:
 
 ```kotlin
 plugins {
     `java-library`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
-    id("xyz.jpenilla.run-paper") version "3.0.2" // Task ./gradlew runServer
-    id("com.gradleup.shadow") version "8.3.6"    // Shadow jar bila menggunakan dependensi eksternal
+    id("xyz.jpenilla.run-paper") version "3.1.0" // Task: ./gradlew runServer
+    id("com.gradleup.shadow") version "8.3.6"    // Shadow jar for bundled external libraries
 }
 
 group = "com.example"
 version = "1.0.0-SNAPSHOT"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21)) // Minecraft 1.20.5+ membutuhkan minimal Java 21
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21)) // Minecraft 1.20.5+ requires Java 21+
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
-    
-    // Contoh library umum
-    // implementation("org.incendo:cloud-paper:2.0.0-beta.10")
+    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 }
 
 tasks {
@@ -59,8 +56,8 @@ tasks {
     }
     
     shadowJar {
-        archiveClassifier.set("") // Menjadikan output shadow jar sebagai artifact utama
-        // relocate package eksternal agar tidak bentrok dengan plugin lain
+        archiveClassifier.set("") // Set shaded jar as default artifact output
+        // Relocate external packages to prevent classpath collisions:
         // relocate("org.incendo.cloud", "com.example.plugin.libs.cloud")
     }
 }
@@ -68,16 +65,16 @@ tasks {
 
 ---
 
-## 3. Konfigurasi `paper-plugin.yml`
+## 3. Manifest Configuration: `paper-plugin.yml`
 
-Modern Paper menggunakan manifest `paper-plugin.yml` yang terletak di `src/main/resources/paper-plugin.yml`.
+Modern Paper introduces the `paper-plugin.yml` manifest located at `src/main/resources/paper-plugin.yml`.
 
-### Keuntungan `paper-plugin.yml`:
-- Dukungan dependency loading yang jauh lebih fleksibel (bootstrapper dependencies, server dependencies).
-- Mendukung deklarasi bootstrapper class (`bootstrapper`).
-- Kompatibilitas multi-threaded Folia (`folia-supported: true`).
+### Advantages of `paper-plugin.yml`:
+- Granular dependency management (bootstrapper dependencies vs server runtime dependencies).
+- Declarative bootstrapper class definition (`bootstrapper`).
+- Explicit multi-threaded Folia compatibility (`folia-supported: true`).
 
-### Contoh Struktur `paper-plugin.yml`:
+### Example `paper-plugin.yml` Structure:
 
 ```yaml
 name: ExamplePlugin
@@ -92,7 +89,7 @@ authors:
 
 dependencies:
   bootstrap:
-    # Dependensi yang dibutuhkan pada fase bootstrap
+    # Dependencies required during the bootstrap phase
   server:
     Vault:
       load: BEFORE
@@ -105,21 +102,21 @@ dependencies:
 
 ---
 
-## 4. Lifecycle Baru: `PluginBootstrap` vs `JavaPlugin`
+## 4. Modern Lifecycle: `PluginBootstrap` vs `JavaPlugin`
 
-Paper memperkenalkan antarmuka `io.papermc.paper.plugin.bootstrap.PluginBootstrap`.
+Paper introduces the `io.papermc.paper.plugin.bootstrap.PluginBootstrap` interface.
 
-### Urutan Lifecycle Server Paper:
-1. **Plugin Loader Creation**: Resolusi classpath dan dependensi.
+### Server Lifecycle Sequence:
+1. **Plugin Loader Creation**: Classpath resolution and dependency wiring.
 2. **Bootstrap Phase (`PluginBootstrap#bootstrap`)**:
-   - Berjalan sangat awal sebelum world di-load.
-   - Digunakan untuk meregistrasi **Brigadier Commands**, modifikasi konfigurasi registry, dan setup resource global.
-3. **Plugin Instantiation**: Instance `JavaPlugin` dibuat.
-4. **`onLoad()`**: Mirip fase Spigot tradisional.
-5. **`onEnable()`**: Registrasi listener event, scheduler, inisialisasi database, dan setup UI/Game logic.
-6. **`onDisable()`**: Graceful shutdown, flush queue database, dan pembatalan task.
+   - Executes before worlds are loaded.
+   - Used to register **Brigadier Commands**, modify registry configurations, and set up global resources.
+3. **Plugin Instantiation**: The `JavaPlugin` instance is created.
+4. **`onLoad()`**: Equivalent to the legacy Bukkit phase.
+5. **`onEnable()`**: Event listener registration, schedulers, database connection pools, and UI/game logic setup.
+6. **`onDisable()`**: Graceful shutdown, database queue flushing, and task cancellation.
 
-### Contoh Implementasi Bootstrapper:
+### Bootstrapper Implementation Example:
 
 ```java
 package com.example.plugin;
@@ -134,16 +131,16 @@ public final class ExampleBootstrap implements PluginBootstrap {
 
     @Override
     public void bootstrap(final BootstrapContext context) {
-        // Registrasi Lifecycle Events seperti command handler modern
+        // Register Lifecycle Events such as modern Brigadier command handlers
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final var registrar = event.registrar();
-            // Registrasi syntax Brigadier di sini
+            // Register Brigadier command nodes here
         });
     }
 }
 ```
 
-### Contoh Implementasi Main Plugin (`JavaPlugin`):
+### Main Plugin Implementation (`JavaPlugin`):
 
 ```java
 package com.example.plugin;
@@ -156,16 +153,16 @@ public final class ExamplePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Menggunakan ComponentLogger modern Paper
+        // Using Paper's modern ComponentLogger
         getComponentLogger().info(
-            Component.text("ExamplePlugin berhasil diaktifkan!", NamedTextColor.GREEN)
+            Component.text("ExamplePlugin successfully enabled!", NamedTextColor.GREEN)
         );
     }
 
     @Override
     public void onDisable() {
         getComponentLogger().info(
-            Component.text("ExamplePlugin dimatikan secara aman.", NamedTextColor.RED)
+            Component.text("ExamplePlugin safely disabled.", NamedTextColor.RED)
         );
     }
 }

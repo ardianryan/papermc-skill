@@ -244,7 +244,7 @@ async function handleCheckUpdate(options = []) {
   try {
     const res = await fetch('https://fill.papermc.io/v3/projects/paper', {
       headers: {
-        'User-Agent': 'papermc-skill/1.0.0 (https://github.com/ardianryan/papermc-skill)'
+        'User-Agent': 'papermc-skill/1.1.0 (https://github.com/ardianryan/papermc-skill)'
       }
     });
 
@@ -271,7 +271,7 @@ async function handleCheckUpdate(options = []) {
     // Fetch details for candidate version
     const verRes = await fetch(`https://fill.papermc.io/v3/projects/paper/versions/${latestVersionId}`, {
       headers: {
-        'User-Agent': 'papermc-skill/1.0.0 (https://github.com/ardianryan/papermc-skill)'
+        'User-Agent': 'papermc-skill/1.1.0 (https://github.com/ardianryan/papermc-skill)'
       }
     });
 

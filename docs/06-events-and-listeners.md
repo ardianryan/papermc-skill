@@ -1,12 +1,12 @@
-# Sistem Event & Listener di Paper
+# Event System & Paper Listeners
 
-Sistem event adalah mekanisme reaktif utama di Paper untuk merespons aksi pemain, lingkungan dunia, entitas, dan siklus server. Paper menyediakan banyak event eksklusif berkinerja tinggi serta integrasi penuh dengan Adventure Component.
+The event bus is Paper's primary reactive mechanism for responding to player interactions, world updates, entity behaviors, and server lifecycle states. Paper provides exclusive high-performance events along with native Kyori Adventure Component integration.
 
 ---
 
-## 1. Anatomi Listener Standar
+## 1. Anatomy of a Modern Listener
 
-Listener mengimplementasikan antarmuka `org.bukkit.event.Listener` dan menggunakan anotasi `@EventHandler`:
+Listeners implement the `org.bukkit.event.Listener` interface and decorate handler methods with `@EventHandler`:
 
 ```java
 import org.bukkit.event.Listener;
@@ -26,35 +26,35 @@ public final class PlayerJoinListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        // Paper menggunakan Adventure Component untuk joinMessage
+        // Paper natively uses Adventure Components for join messages
         event.joinMessage(
             MiniMessage.miniMessage().deserialize(
-                "<gray>[<green>+</green>] <yellow>" + event.getPlayer().getName() + "</yellow> bergabung ke server!</gray>"
+                "<gray>[<green>+</green>] <yellow>" + event.getPlayer().getName() + "</yellow> joined the server!</gray>"
             )
         );
     }
 }
 ```
 
-### Memahami `EventPriority`:
-Urutan eksekusi event dari pertama hingga terakhir:
-1. `LOWEST` (dijalankan paling awal, bagus untuk observasi mentah)
+### Understanding `EventPriority`:
+Execution sequence from first to last:
+1. `LOWEST` (Runs first, ideal for raw observation or early preprocessing)
 2. `LOW`
-3. `NORMAL` (default)
+3. `NORMAL` (Default priority)
 4. `HIGH`
-5. `HIGHEST` (dijalankan paling akhir sebelum event final)
-6. `MONITOR` (**HANYA UNTUK MEMBACA/LOGGING**; DILARANG memodifikasi atau membatalkan event di priority ini karena plugin lain tidak akan dapat merespons perubahan Anda).
+5. `HIGHEST` (Runs last before final decision)
+6. `MONITOR` (**READ-ONLY / LOGGING ONLY**; strictly forbidden from modifying or cancelling events, as downstream plugins cannot observe changes).
 
-> **Penting**: Selalu tambahkan `ignoreCancelled = true` jika listener Anda tidak perlu memproses aksi yang sudah dibatalkan oleh plugin proteksi area (seperti WorldGuard/GriefPrevention).
+> **Important**: Always specify `ignoreCancelled = true` if your listener does not need to process interactions already prevented by land protection plugins (such as WorldGuard or GriefPrevention).
 
 ---
 
-## 2. Event Modern Eksklusif Paper
+## 2. Modern Paper-Exclusive Events
 
-Paper mengganti atau melengkapi beberapa event Bukkit lama dengan alternatif yang lebih efisien dan modern:
+Paper introduces modern, high-performance replacements for legacy Bukkit events:
 
-### `AsyncChatEvent` (Menggantikan `AsyncPlayerChatEvent`)
-Paper menggunakan `io.papermc.paper.event.player.AsyncChatEvent` yang bekerja langsung dengan `Component` dan MiniMessage:
+### `AsyncChatEvent` (Replaces `AsyncPlayerChatEvent`)
+Paper's `io.papermc.paper.event.player.AsyncChatEvent` operates directly with `Component` and MiniMessage:
 
 ```java
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -63,7 +63,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 @EventHandler
 public void onChat(AsyncChatEvent event) {
-    // Memodifikasi format pesan dengan Adventure
+    // Format chat messages cleanly using Adventure
     event.renderer((source, sourceDisplayName, message, viewer) -> 
         MiniMessage.miniMessage().deserialize("<gray>[Member] </gray>")
             .append(sourceDisplayName)
@@ -74,18 +74,18 @@ public void onChat(AsyncChatEvent event) {
 ```
 
 ### `PrePlayerAttackEntityEvent`
-Dijalankan sebelum kalkulasi serangan vanilla terjadi. Sangat ideal untuk sistem combat kustom, cooldown attack senjata khusus, atau verifikasi proteksi PvP.
+Fires prior to vanilla attack calculations. Essential for custom combat mechanics, weapon cooldown verification, or anti-griefing checks.
 
 ### `ServerTickStartEvent` & `ServerTickEndEvent`
-Memonitor performa server secara presisi per-tick tanpa membebani scheduler.
+Provides cycle-accurate server performance metrics per-tick without adding scheduler overhead.
 
 ---
 
-## 3. Membuat Custom Event
+## 3. Creating Custom Events
 
-Anda dapat membuat event sendiri untuk mengekspos API plugin Anda kepada developer lain (seperti yang dilakukan oleh LuckPerms atau WorldGuard).
+You can create custom events to expose an extensible public API for other plugins (following the design of LuckPerms or WorldGuard):
 
-### Contoh Custom Event:
+### Custom Event Example:
 ```java
 package com.example.plugin.event;
 
@@ -103,7 +103,7 @@ public final class PlayerLevelUpEvent extends Event implements Cancellable {
     private boolean cancelled = false;
 
     public PlayerLevelUpEvent(Player player, int newLevel) {
-        // false jika berjalan di main/region thread (Sync), true jika Async
+        // false for synchronous execution on main/region thread, true for asynchronous
         super(false);
         this.player = player;
         this.newLevel = newLevel;
@@ -140,24 +140,23 @@ public final class PlayerLevelUpEvent extends Event implements Cancellable {
 }
 ```
 
-### Memanggil (Dispatch) Event:
+### Dispatching the Custom Event:
 ```java
 PlayerLevelUpEvent event = new PlayerLevelUpEvent(player, 10);
 Bukkit.getPluginManager().callEvent(event);
 
 if (!event.isCancelled()) {
-    // Lanjutkan aksi jika event tidak dibatalkan oleh plugin lain
-    player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Selamat, Anda naik level!</green>"));
+    player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>Congratulations, you leveled up!</green>"));
 }
 ```
 
 ---
 
-## 4. Unregistering Event & Pembersihan
+## 4. Listener Unregistration & Memory Hygiene
 
-Untuk mencegah memory leak saat reload atau saat plugin dinonaktifkan:
-- Semua event yang didaftarkan melalui `pluginManager.registerEvents(listener, this)` otomatis di-unregister saat `onDisable()`.
-- Jika Anda mendaftarkan event dinamis (misal per-minigame match), unregister secara manual ketika game selesai:
+To prevent memory leaks across plugin reload or disable cycles:
+- All listeners registered via `pluginManager.registerEvents(listener, this)` are unregistered automatically upon `onDisable()`.
+- If you register dynamic short-lived listeners (such as for a temporary minigame session), unregister them explicitly upon session completion:
   ```java
   HandlerList.unregisterAll(matchListener);
   ```

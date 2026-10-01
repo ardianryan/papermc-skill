@@ -2,8 +2,8 @@ name: PaperMC & Minecraft Auto-Updater
 
 on:
   schedule:
-    - cron: '0 2 * * 1' # Berjalan otomatis setiap hari Senin pukul 02:00 UTC
-  workflow_dispatch:     # Dapat dipicu secara manual kapan saja dari tab Actions
+    - cron: '0 2 * * 1' # Runs automatically every Monday at 02:00 UTC
+  workflow_dispatch:     # Can be triggered manually at any time from Actions tab
 
 jobs:
   check-and-update:

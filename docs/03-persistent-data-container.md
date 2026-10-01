@@ -1,19 +1,19 @@
-# PersistentDataContainer (PDC) di Paper Minecraft
+# PersistentDataContainer (PDC) in Modern Paper
 
-`PersistentDataContainer` (PDC) adalah API resmi Bukkit/Paper untuk menyimpan data kustom secara permanen pada objek dalam game seperti:
-- **Item (`ItemMeta`)**
-- **Entity (`Entity`, `LivingEntity`, `Player`)**
-- **Block State / Tile Entity (`TileState`)**
-- **Chunk (`Chunk`)**
-- **World (`World`)**
+`PersistentDataContainer` (PDC) is the official, type-safe Bukkit/Paper API for storing custom persistent metadata directly on in-game Minecraft objects, including:
+- **ItemStacks (`ItemMeta`)**
+- **Entities (`Entity`, `LivingEntity`, `Player`)**
+- **Block States / Tile Entities (`TileState`)**
+- **Chunks (`Chunk`)**
+- **Worlds (`World`)**
 
-PDC menggantikan ketergantungan pada library NBT pihak ketiga (seperti NBTAPI) atau pembacaan lore tersembunyi yang rapuh. Data yang disimpan di PDC disimpan langsung dalam NBT vanilla Minecraft dan otomatis disimpan/di-load bersama world data.
+PDC eliminates brittle dependencies on legacy third-party NBT libraries (like NBTAPI) or parsing hidden lore strings. Data placed in PDC is serialized natively into Minecraft's vanilla NBT and automatically saved and loaded alongside world saves.
 
 ---
 
-## 1. Konsep Kunci: NamespacedKey
+## 1. Key Concept: NamespacedKey
 
-Setiap nilai yang disimpan di PDC diidentifikasi oleh `NamespacedKey` unik yang terdiri dari `namespace` (biasanya nama plugin berhuruf kecil) dan `key`:
+Every value stored in PDC is addressed by a unique `NamespacedKey` comprising a `namespace` (typically your lowercase plugin name) and a `key` identifier:
 
 ```java
 import org.bukkit.NamespacedKey;
@@ -34,40 +34,37 @@ public final class DataKeys {
 
 ---
 
-## 2. Menyimpan & Membaca Tipe Data Primitif
+## 2. Storing & Reading Primitive Data Types
 
-PDC mendukung berbagai tipe bawaan melalui enum `PersistentDataType`:
+PDC supports standard primitive types via the `PersistentDataType` interface:
 - `PersistentDataType.STRING`
 - `PersistentDataType.INTEGER`
 - `PersistentDataType.LONG`
 - `PersistentDataType.DOUBLE`
 - `PersistentDataType.FLOAT`
-- `PersistentDataType.BYTE` (boolean sering disimpan sebagai byte `1` / `0`)
+- `PersistentDataType.BYTE` (booleans are stored as byte `1` / `0`)
 - `PersistentDataType.BYTE_ARRAY`
-- `PersistentDataType.TAG_CONTAINER` (PDC bersarang / nested)
+- `PersistentDataType.TAG_CONTAINER` (nested PDC structures)
 
-### Contoh Menyimpan Data pada ItemStack:
+### Example: Storing Metadata on an ItemStack
 ```java
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 public ItemStack createTeleportWand(String wandId) {
     ItemStack wand = new ItemStack(Material.BLAZE_ROD);
-    ItemMeta meta = wand.getItemMeta();
-    if (meta != null) {
+    wand.editMeta(meta -> {
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(DataKeys.CUSTOM_ID, PersistentDataType.STRING, wandId);
         pdc.set(DataKeys.COOLDOWN_TIMESTAMP, PersistentDataType.LONG, System.currentTimeMillis());
-        wand.setItemMeta(meta);
-    }
+    });
     return wand;
 }
 ```
 
-### Contoh Membaca & Memvalidasi Data pada ItemStack:
+### Example: Reading & Validating ItemStack Metadata
 ```java
 public boolean isCustomWand(ItemStack item) {
     if (item == null || !item.hasItemMeta()) return false;
@@ -84,42 +81,45 @@ public String getWandId(ItemStack item) {
 
 ---
 
-## 3. Menyimpan Data pada Entitas dan Chunk
+## 3. Storing Metadata on Entities and Chunks
 
-PDC juga dapat diakses langsung pada entitas dan chunk tanpa meta terpisah:
+PDC is accessible directly on entities and chunks without wrapping metadata:
 
 ```java
 import org.bukkit.entity.Entity;
 import org.bukkit.Chunk;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 
-// Menandai entitas khusus (misal Custom Boss)
+// Tagging custom entities (e.g. Dungeon Boss)
 public void markAsCustomBoss(Entity entity, String bossType) {
     entity.getPersistentDataContainer().set(DataKeys.CUSTOM_ID, PersistentDataType.STRING, bossType);
 }
 
-// Menandai chunk yang telah diproses oleh plugin
-public void markChunkProcessed(Chunk chunk) {
-    chunk.getPersistentDataContainer().set(new NamespacedKey("myplugin", "processed"), PersistentDataType.BYTE, (byte) 1);
+// Tagging chunks processed by your world generation systems
+public void markChunkProcessed(Chunk chunk, NamespacedKey key) {
+    chunk.getPersistentDataContainer().set(key, PersistentDataType.BYTE, (byte) 1);
 }
 ```
 
 ---
 
-## 4. Tipe Data Kustom (Complex Object Serialization)
+## 4. Custom Complex Data Types (`PersistentDataType<T, Z>`)
 
-Kita dapat mengimplementasikan antarmuka `PersistentDataType<T, Z>` kustom untuk menyimpan objek kompleks (seperti record/POJO) ke dalam PDC tanpa perlu serialisasi JSON manual di setiap panggilan.
+You can implement custom `PersistentDataType<T, Z>` adapters to store complex Java objects (such as records or POJOs) directly into PDC without manual JSON conversions on every invocation.
 
-### Contoh Record Objek:
+### Object Record:
 ```java
 public record ItemStats(int damageBonus, double critChance, int durability) {}
 ```
 
-### Implementasi `PersistentDataType` Kustom:
+### Custom `PersistentDataType` Adapter:
 ```java
+import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.NamespacedKey;
+import org.bukkit.plugin.Plugin;
 
 public final class ItemStatsDataType implements PersistentDataType<PersistentDataContainer, ItemStats> {
 
@@ -127,7 +127,7 @@ public final class ItemStatsDataType implements PersistentDataType<PersistentDat
     private final NamespacedKey critKey;
     private final NamespacedKey durabilityKey;
 
-    public ItemStatsDataType(org.bukkit.plugin.Plugin plugin) {
+    public ItemStatsDataType(Plugin plugin) {
         this.damageKey = new NamespacedKey(plugin, "damage");
         this.critKey = new NamespacedKey(plugin, "crit");
         this.durabilityKey = new NamespacedKey(plugin, "durability");
@@ -162,18 +162,18 @@ public final class ItemStatsDataType implements PersistentDataType<PersistentDat
 }
 ```
 
-### Penggunaan Langsung:
+### Usage:
 ```java
 ItemStats stats = new ItemStats(25, 0.15, 500);
 pdc.set(DataKeys.ITEM_STATS, new ItemStatsDataType(plugin), stats);
 
-// Membaca kembali:
+// Read back:
 ItemStats loadedStats = pdc.get(DataKeys.ITEM_STATS, new ItemStatsDataType(plugin));
 ```
 
 ---
 
-## 5. Best Practices PDC
-1. **Gunakan Singleton Keys**: Jangan instansiasi `new NamespacedKey(...)` berulang kali di hot-loop (seperti `EntityDamageByEntityEvent`); simpan sebagai static final constants.
-2. **Namespace Konsisten**: Selalu gunakan plugin instance untuk key namespace agar tidak terjadi tabrakan dengan plugin lain.
-3. **Pembersihan Data**: Hapus data yang tidak lagi valid menggunakan `pdc.remove(key)` untuk menghemat ukuran file world/NBT.
+## 5. PDC Best Practices
+1. **Singleton Keys**: Never instantiate `new NamespacedKey(...)` repeatedly in hot event loops; define static final constants.
+2. **Consistent Namespaces**: Always use your plugin instance namespace to prevent collisions with third-party plugins.
+3. **Data Cleanup**: Clean up stale metadata using `pdc.remove(key)` to minimize world save file sizes.

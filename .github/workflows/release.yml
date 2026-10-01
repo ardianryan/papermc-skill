@@ -3,15 +3,15 @@ name: Automated Release & Publish
 on:
   push:
     tags:
-      - 'v*' # Trigger saat tag baru dipush (contoh: v1.0.0, v1.0.1)
-  workflow_dispatch: # Memungkinkan trigger manual dari GitHub UI jika dibutuhkan
+      - 'v*' # Triggered on new version tags (e.g. v1.0.0, v1.1.0)
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 jobs:
   release-and-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Diperlukan untuk membuat GitHub Release
-      id-token: write # Diperlukan untuk NPM Provenance (OIDC)
+      contents: write # Required for GitHub Releases
+      id-token: write # Required for NPM Provenance (OIDC)
 
     steps:
       - name: Checkout repository
@@ -46,14 +46,14 @@ jobs:
           const version = pkg.version;
           const changelog = fs.readFileSync("CHANGELOG.md", "utf8");
 
-          // Ekstrak bagian changelog sesuai versi saat ini
+          // Extract changelog section for the current version
           const escapedVersion = version.replace(/\./g, "\\.");
           const regex = new RegExp(`## \\\\\\[${escapedVersion}\\\\\\][\\s\\S]*?(?=\\n## \\\\\\[|$)`);
           const match = changelog.match(regex);
           
           let releaseNotes = "";
           if (match) {
-            // Hapus header baris pertama
+            // Strip the first header line
             releaseNotes = match[0].replace(/^## \[[^\n]+\n+/, "").trim();
           } else {
             releaseNotes = `Automated release for version ${version}. See CHANGELOG.md for full details.`;

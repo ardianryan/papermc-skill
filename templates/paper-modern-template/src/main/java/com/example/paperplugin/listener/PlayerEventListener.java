@@ -2,7 +2,6 @@ package com.example.paperplugin.listener;
 
 import com.example.paperplugin.ExamplePaperPlugin;
 import com.example.paperplugin.data.PluginDataKeys;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
@@ -32,28 +31,28 @@ public final class PlayerEventListener implements Listener {
         pdc.set(PluginDataKeys.LAST_LOGIN_TIMESTAMP, PersistentDataType.LONG, System.currentTimeMillis());
 
         if (currentJoins == 1) {
-            // Pertama kali bergabung
+            // First time player join
             final String firstJoinFormat = plugin.getConfig().getString(
                 "messages.first_join",
-                "<rainbow>MEMBER BARU!</rainbow> Sambut <yellow><player></yellow>!"
+                "<rainbow>NEW MEMBER!</rainbow> Give a warm welcome to <yellow><player></yellow>!"
             );
             event.joinMessage(
                 MiniMessage.miniMessage().deserialize(firstJoinFormat, Placeholder.unparsed("player", player.getName()))
             );
         } else {
-            // Pemain kembali bergabung
+            // Returning player join
             final String welcomeFormat = plugin.getConfig().getString(
                 "messages.welcome",
-                "<green>Selamat datang kembali, <yellow><player></yellow>!</green>"
+                "<green>Welcome back, <yellow><player></yellow>!</green>"
             );
             event.joinMessage(
                 MiniMessage.miniMessage().deserialize(welcomeFormat, Placeholder.unparsed("player", player.getName()))
             );
         }
 
-        // Kirim action bar personal
+        // Send personalized action bar
         player.sendActionBar(
-            MiniMessage.miniMessage().deserialize("<gray>Kunjungan ke-<gold><count></gold></gray>",
+            MiniMessage.miniMessage().deserialize("<gray>Visit #<gold><count></gold></gray>",
                 Placeholder.unparsed("count", String.valueOf(currentJoins))
             )
         );

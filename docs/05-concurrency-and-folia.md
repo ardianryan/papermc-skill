@@ -1,38 +1,38 @@
-# Konkurensi, Threading & Kompatibilitas Folia
+# Concurrency, Threading & Folia Multi-Thread Compatibility
 
-Salah satu perubahan paling revolusioner di ekosistem Paper adalah kedatangan **Folia**. Folia memecah satu "Server Main Thread" Minecraft menjadi ratusan thread regional mandiri (**Threaded Regions**).
+One of the most revolutionary milestones in the PaperMC ecosystem is the emergence of **Folia**. Folia breaks Minecraft's monolithic "Server Main Thread" into hundreds of independent regional threads (**Threaded Regions**).
 
-Konsekuensinya, metode konkurensi lama seperti `Bukkit.getScheduler()` atau mengakses state world dari sembarang thread akan menyebabkan **`IllegalStateException` atau crash fatal** di Folia.
+Consequently, legacy Bukkit concurrency assumptions like `Bukkit.getScheduler()` or mutating world state from arbitrary threads result in **`IllegalStateException` crashes or data corruption** on Folia.
 
 ---
 
-## 1. Model Threading: Bukkit vs Paper vs Folia
+## 1. Threading Architecture: Bukkit vs Paper vs Folia
 
 ```
 [Bukkit / Vanilla]
-Satu Main Thread ─── Tick Semua Dunia, Entity, Blok, Redstone, AI, Chunk ───>
+Single Main Thread ─── Ticks All Worlds, Entities, Blocks, Redstone, AI, Chunks ───>
 
-[Folia Regionized Threading]
-Region Thread 1  ─── Tick Region Dunia A (Chunk 0..32, 0..32) ───>
-Region Thread 2  ─── Tick Region Dunia A (Chunk 64..96, 64..96) ──>
-Region Thread 3  ─── Tick Nether (Region B) ──────────────────────>
-Global Thread    ─── Tick Weather, Time, Player List, Commands ───>
-Async Threads    ─── Network I/O, File Saving, Database Queries ──>
+[Folia Regionized Multi-Threading]
+Region Thread 1  ─── Ticks Overworld Region A (Chunks 0..32, 0..32) ───>
+Region Thread 2  ─── Ticks Overworld Region B (Chunks 64..96, 64..96) ──>
+Region Thread 3  ─── Ticks Nether Region C ────────────────────────────>
+Global Thread    ─── Ticks Weather, Time, Player List, Commands ───────>
+Async Threads    ─── Network I/O, File Saving, Database Queries ────────>
 ```
 
-Di Folia:
-- Tidak ada lagi konsep "The Main Thread".
-- Objek `World`, `Entity`, dan `Block` hanya boleh diakses di **thread region yang memiliki chunk/lokasi tersebut**.
-- Mengakses entity pemain dari thread lain akan melempar error `Plugin attempted to access entity from wrong thread`.
+In Folia:
+- There is no single "Main Thread".
+- `World`, `Entity`, and `Block` instances may only be queried or mutated on the **region thread owning that coordinate/chunk**.
+- Accessing an entity from a foreign region thread throws `IllegalStateException: Plugin attempted to access entity from wrong thread`.
 
 ---
 
-## 2. Hirarki Scheduler Modern di Folia & Paper
+## 2. Modern Scheduler Hierarchy in Paper & Folia
 
-Paper memperkenalkan scheduler baru yang kompatibel dengan Folia dan Paper standar:
+Paper introduces clean scheduler primitives that operate seamlessly across both multi-threaded Folia and single-threaded Paper:
 
 ### 1. `RegionScheduler`
-Digunakan untuk mengeksekusi task pada lokasi dunia atau koordinat chunk tertentu.
+Used to execute tasks bound to specific world coordinates or chunks:
 
 ```java
 import org.bukkit.Bukkit;
@@ -41,59 +41,59 @@ import org.bukkit.plugin.Plugin;
 
 Location loc = player.getLocation();
 
-// Menjalankan task 1-kali pada thread region lokasi tersebut
+// Run a one-time task on the region thread owning this location
 Bukkit.getRegionScheduler().execute(plugin, loc, () -> {
     loc.getBlock().setType(org.bukkit.Material.GOLD_BLOCK);
 });
 
-// Menjalankan task berulang (repeating) pada region
+// Run a repeating task on the region thread
 Bukkit.getRegionScheduler().runAtFixedRate(plugin, loc, task -> {
     loc.getWorld().spawnParticle(org.bukkit.Particle.FLAME, loc, 5);
-}, 20L, 20L); // delay 20 tick, period 20 tick
+}, 20L, 20L); // 20 ticks initial delay, 20 ticks period
 ```
 
 ### 2. `EntityScheduler`
-Setiap `Entity` memiliki scheduler tersendiri. Task akan dieksekusi tepat pada thread region di mana entity tersebut sedang berada, bahkan jika entity tersebut bergerak/teleport antar region.
+Every `Entity` owns its own dedicated scheduler. Tasks execute directly on whichever region thread the entity currently occupies, even across chunk border transitions:
 
 ```java
 player.getScheduler().run(plugin, task -> {
     player.giveExp(10);
-    player.sendMessage("Bonus EXP didapatkan!");
+    player.sendMessage("Bonus EXP received!");
 }, () -> {
-    // Callback jika entity telah mati atau tidak valid sebelum task sempat berjalan
-    plugin.getLogger().warning("Pemain logout sebelum exp diberikan.");
+    // Retired callback if entity is dead or invalidated before execution
+    plugin.getLogger().warning("Player disconnected before reward was applied.");
 });
 ```
 
 ### 3. `GlobalRegionScheduler`
-Digunakan untuk hal-hal yang bersifat global server dan tidak terikat pada koordinat block/entity tertentu (misal: pengumuman berkala chat global, update scoreboard global, waktu dunia).
+Used for server-wide tasks unconfined to specific coordinates (e.g., global announcements, world time, or weather):
 
 ```java
 Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
-    Bukkit.broadcast(MiniMessage.miniMessage().deserialize("<gold>[Pengumuman] Kunjungi discord kami!</gold>"));
+    Bukkit.broadcast(MiniMessage.miniMessage().deserialize("<gold>[Announcement] Join our Discord server!</gold>"));
 }, 100L, 1200L);
 ```
 
 ### 4. `AsyncScheduler`
-Untuk I/O, database query, request HTTP, komputasi berat non-Bukkit API. Menggunakan waktu nyata (`java.time.TimeUnit`), bukan tick game:
+Used for I/O, database interactions, HTTP calls, and non-Bukkit mathematical computations. Operates using wall-clock time (`java.time.TimeUnit`) rather than game ticks:
 
 ```java
 import java.util.concurrent.TimeUnit;
 
 Bukkit.getAsyncScheduler().runDelayed(plugin, task -> {
-    // Menjalankan query database MySQL / SQLite
+    // Run database query off the game thread
     database.savePlayerData(uuid, data);
 }, 5, TimeUnit.SECONDS);
 ```
 
 ---
 
-## 3. Pola Abstraksi Scheduler Universal (Paper + Folia)
+## 3. Universal Scheduler Abstraction Pattern (Paper + Folia)
 
-Banyak plugin perlu berjalan di server Paper standar (single-thread) dan Folia sekaligus. Cara terbaik adalah membuat lapisan pembungkus (*abstraction wrapper*) seperti yang digunakan oleh **Chunky** dan **squaremap**:
+Most production plugins must run identically on standard single-threaded Paper and multi-threaded Folia. The recommended approach is an abstraction layer (as pioneered by **Chunky** and **squaremap**):
 
 ```java
-public final class PlatformScheduler {
+public final class UniversalScheduler {
 
     private static final boolean IS_FOLIA = checkFolia();
 
@@ -110,7 +110,7 @@ public final class PlatformScheduler {
         return IS_FOLIA;
     }
 
-    public static void runLocation(Plugin plugin, Location location, Runnable runnable) {
+    public static void runAtLocation(Plugin plugin, Location location, Runnable runnable) {
         if (IS_FOLIA) {
             Bukkit.getRegionScheduler().execute(plugin, location, runnable);
         } else {
@@ -118,7 +118,7 @@ public final class PlatformScheduler {
         }
     }
 
-    public static void runEntity(Plugin plugin, Entity entity, Runnable runnable) {
+    public static void runForEntity(Plugin plugin, Entity entity, Runnable runnable) {
         if (IS_FOLIA) {
             entity.getScheduler().run(plugin, task -> runnable.run(), null);
         } else {
@@ -138,13 +138,13 @@ public final class PlatformScheduler {
 
 ---
 
-## 4. Aturan Wajib untuk Kompatibilitas Folia
+## 4. Mandatory Folia Compatibility Rules
 
-1. **Deklarasikan di Manifest**:
-   Tambahkan `folia-supported: true` di `paper-plugin.yml`. Jika tidak, server Folia akan menampilkan peringatan bahwa plugin Anda berpotensi tidak aman.
-2. **Jangan Pernah Mengakses Chunk/Block dari Async Thread**:
-   Gunakan `world.getChunkAtAsync(x, z)` yang mengembalikan `CompletableFuture<Chunk>`.
-3. **Gunakan TeleportAsync**:
-   Gunakan `entity.teleportAsync(location)` alih-alih `entity.teleport(location)`. Di Folia, teleportasi melintasi region thread yang berbeda harus dilakukan secara asinkron.
-4. **Hindari State Statis Global**:
-   Variabel static yang menyimpan list player atau entity aktif dapat mengalami *race condition* jika dimodifikasi oleh beberapa thread region secara paralel. Gunakan struktur data thread-safe (`ConcurrentHashMap`, `CopyOnWriteArrayList`) bila terpaksa.
+1. **Declare Compatibility in Manifest**:
+   Always include `folia-supported: true` in `paper-plugin.yml`. Without this, Folia flags your plugin as potentially hazardous upon boot.
+2. **Never Read Chunks/Blocks Synchronously Off-Thread**:
+   Always invoke `world.getChunkAtAsync(x, z)` which returns a `CompletableFuture<Chunk>`.
+3. **Use TeleportAsync**:
+   Always call `entity.teleportAsync(location)` instead of `entity.teleport(location)`. Across Folia, cross-region movement must be processed asynchronously.
+4. **Avoid Global Mutable Static Collections**:
+   Static lists of active players or entities experience severe race conditions when mutated by multiple region threads concurrently. Use thread-safe structures (`ConcurrentHashMap`) or delegate state to player PDC.

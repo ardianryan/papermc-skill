@@ -1,10 +1,10 @@
-# Konfigurasi Modern Paper Template Plugin
-# Format teks menggunakan format Kyori MiniMessage
+# Modern Paper Plugin Template Configuration
+# Formatted using Kyori MiniMessage syntax
 
 messages:
-  welcome: "<gradient:#00c6ff:#0072ff><bold>Selamat datang di server!</bold></gradient> Senang melihatmu bergabung, <yellow><player></yellow>."
-  first_join: "<rainbow><bold>MEMBER BARU!</bold></rainbow> Mari sambut <yellow><player></yellow> yang baru pertama kali bergabung!"
-  command_hello: "<green>Halo, <aqua><target></aqua>! Salam dari server Paper modern.</green>"
+  welcome: "<gradient:#00c6ff:#0072ff><bold>Welcome back to the server!</bold></gradient> Great to see you again, <yellow><player></yellow>."
+  first_join: "<rainbow><bold>NEW MEMBER!</bold></rainbow> Give a warm welcome to <yellow><player></yellow> for joining the server!"
+  command_hello: "<green>Hello, <aqua><target></aqua>! Greetings from modern PaperMC.</green>"
 
 settings:
   track_join_count: true

@@ -8,7 +8,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Adapter Scheduler yang secara transparan mendukung arsitektur Paper standar dan Folia (Regionized Threading).
+ * Universal Scheduler Adapter providing transparent concurrency across standard Paper and Folia (Threaded Regions).
  */
 public final class SchedulerAdapter {
 
@@ -31,7 +31,7 @@ public final class SchedulerAdapter {
     }
 
     /**
-     * Menjalankan runnable pada thread region lokasi tertentu.
+     * Executes a runnable on the region thread owning the specified location.
      */
     public static void runAtLocation(final Plugin plugin, final Location location, final Runnable runnable) {
         if (IS_FOLIA) {
@@ -42,7 +42,7 @@ public final class SchedulerAdapter {
     }
 
     /**
-     * Menjalankan runnable pada thread yang memiliki entity tertentu.
+     * Executes a runnable on the region thread currently owning the specified entity.
      */
     public static void runAtEntity(final Plugin plugin, final Entity entity, final Runnable runnable) {
         if (IS_FOLIA) {
@@ -53,7 +53,7 @@ public final class SchedulerAdapter {
     }
 
     /**
-     * Menjalankan runnable secara asynchronous (off-main-thread).
+     * Executes a runnable asynchronously (off-main-thread).
      */
     public static void runAsync(final Plugin plugin, final Runnable runnable) {
         if (IS_FOLIA) {
@@ -64,7 +64,7 @@ public final class SchedulerAdapter {
     }
 
     /**
-     * Menjalankan task delayed secara asynchronous.
+     * Executes a delayed task asynchronously.
      */
     public static void runAsyncDelayed(final Plugin plugin, final Runnable runnable, final long delay, final TimeUnit timeUnit) {
         if (IS_FOLIA) {

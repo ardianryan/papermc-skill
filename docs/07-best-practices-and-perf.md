@@ -1,60 +1,59 @@
-# Best Practices & Optimasi Performa Plugin Paper
+# Best Practices & Performance Optimization for Paper Plugins
 
-Pengembangan plugin Minecraft di server berkapasitas besar menuntut efisiensi tinggi, bebas memory leak, dan tidak memblokir tick game. Dokumen ini merangkum aturan emas dan anti-pattern yang sering terjadi.
+Building Minecraft server plugins for large communities requires high efficiency, zero memory leaks, and non-blocking game tick loops. This guide summarizes essential rules, performance optimizations, and anti-patterns.
 
 ---
 
-## 1. Mencegah Memory Leak (Kebocoran Memori)
+## 1. Preventing Memory Leaks
 
-Minecraft memiliki arsitektur objek yang saling terhubung erat. Menyimpan referensi objek Bukkit di memori Java lebih lama dari masa hidupnya dapat mencegah Garbage Collector (GC) membersihkan ratusan megabyte data.
+Minecraft exhibits a tightly coupled object graph. Holding Bukkit object references in memory beyond their intended lifecycle prevents the JVM Garbage Collector (GC) from clearing hundreds of megabytes of world and connection data.
 
-### 🔴 Anti-Pattern: Menyimpan Objek Bukkit di Collection Statis
+### 🔴 Anti-Pattern: Holding Bukkit Objects in Static Collections
 ```java
-// SANGAT BERBAHAYA: Player objek menahan referensi ke World, Chunk, Connection, dll.
+// CRITICAL HAZARD: Player objects hold references to World, Chunks, and Network Connections
 public static final Set<Player> activePlayers = new HashSet<>();
 public static final Map<Player, PlayerData> dataMap = new HashMap<>();
 ```
-Jika pemain disconnect, objek `Player` tidak akan bisa di-garbage collect!
+When a player disconnects, the `Player` instance cannot be garbage-collected, creating a massive memory leak!
 
-### 🟢 Solusi: Simpan `UUID`
+### 🟢 Solution: Store `UUID` Primitives
 ```java
-// AMAN: UUID hanya 16-byte identifier yang tidak menahan referensi dunia/koneksi
+// SAFE: UUID is a lightweight 16-byte identifier with zero lingering references
 public static final Set<UUID> activePlayerUuids = new HashSet<>();
 public static final Map<UUID, PlayerData> dataMap = new ConcurrentHashMap<>();
 
-// Ambil instance player hanya saat dibutuhkan:
+// Retrieve player instance only when needed:
 Player player = Bukkit.getPlayer(uuid);
 if (player != null) {
-    // Gunakan
+    // Process player
 }
 ```
 
-> **Aturan Umum**: Jangan pernah menyimpan `Player`, `Entity`, `World`, `Chunk`, atau `Block` di dalam field permanen/statis. Gunakan `UUID`, `NamespacedKey`, atau koordinat primitif (`worldName`, `x`, `y`, `z`).
+> **Golden Rule**: Never retain long-lived references to `Player`, `Entity`, `World`, `Chunk`, or `Block` instances in static fields. Use `UUID`, `NamespacedKey`, or primitive coordinates (`worldName`, `x`, `y`, `z`).
 
 ---
 
-## 2. Operasi I/O & Database Selalu Asinkron
+## 2. Asynchronous I/O & Database Operations
 
-Setiap tick server berjalan dalam ~50 milidetik (20 TPS). Operasi disk I/O, pembacaan file besar, koneksi web/HTTP, atau query database yang membutuhkan waktu 100ms akan langsung menyebabkan server lag/freeze (tps drop).
+Server game ticks run in ~50 milliseconds (20 TPS). File I/O, heavy disk reads, HTTP web requests, or database queries taking even 100ms will immediately cause TPS drops and server lag spikes.
 
-### 🟢 Solusi: Gunakan Async Threads & CompletableFuture
+### 🟢 Solution: Async Threads & CompletableFuture
 ```java
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
 
 public CompletableFuture<PlayerData> loadDataAsync(UUID uuid) {
     return CompletableFuture.supplyAsync(() -> {
-        // Berjalan di luar thread game (off-main-thread)
+        // Runs off the main game thread
         return database.fetchUser(uuid);
     }, myPluginThreadPool).thenApply(data -> {
         return data != null ? data : new PlayerData(uuid);
     });
 }
 
-// Menggunakan hasilnya:
+// Consuming the result safely:
 loadDataAsync(player.getUniqueId()).thenAccept(data -> {
-    // Jika perlu memodifikasi state game Bukkit (seperti memberi item),
-    // jadwalkan kembali ke scheduler region pemain:
+    // Schedule back to the player's entity scheduler when mutating game state:
     player.getScheduler().run(plugin, task -> {
         player.giveExp(data.getPendingExp());
     }, null);
@@ -63,56 +62,56 @@ loadDataAsync(player.getUniqueId()).thenAccept(data -> {
 
 ---
 
-## 3. Menghindari Synchronous Chunk Loading
+## 3. Eliminating Synchronous Chunk Loading
 
-Memanggil `world.getChunkAt(x, z)` atau `location.getBlock()` pada chunk yang belum di-load akan memaksa server memuat chunk tersebut dari disk secara synchronous (membekukan tick thread hingga chunk selesai dibaca).
+Invoking `world.getChunkAt(x, z)` or `location.getBlock()` on an unloaded chunk forces the server to read chunk data synchronously from disk, freezing the main tick thread.
 
 ### 🔴 Anti-Pattern
 ```java
-Chunk chunk = world.getChunkAt(x, z); // Membekukan server jika chunk belum di-load!
+Chunk chunk = world.getChunkAt(x, z); // Freezes the server if the chunk is not yet loaded!
 ```
 
-### 🟢 Solusi Paper: Asynchronous Chunk Loading
-Gunakan API Paper `getChunkAtAsync`:
+### 🟢 Paper Solution: Asynchronous Chunk Loading
+Use Paper's native `getChunkAtAsync`:
 
 ```java
 world.getChunkAtAsync(x, z, true).thenAccept(chunk -> {
-    // Chunk berhasil dimuat tanpa lag spike pada TPS
+    // Chunk loaded asynchronously without TPS drops
     processChunkBlocks(chunk);
 });
 ```
 
 ---
 
-## 4. Konfigurasi (`config.yml`) yang Tangguh
+## 4. Robust Configuration (`config.yml`) Handling
 
-Di Paper, file YAML secara default menggunakan encoding UTF-8. Pastikan membaca dan menyimpan file konfigurasi dengan aman:
+In Paper, YAML files default to UTF-8 encoding. Read and reload configuration files cleanly:
 
 ```java
-// Menyimpan default config dari jar jika belum ada
+// Save embedded default config from jar if missing
 saveDefaultConfig();
 
-// Reload config
+// Reload configuration
 reloadConfig();
 FileConfiguration config = getConfig();
 
-// Mengambil pesan dengan fallback default
-String rawMessage = config.getString("messages.welcome", "<green>Selamat datang!</green>");
+// Read messages with fallback defaults
+String rawMessage = config.getString("messages.welcome", "<green>Welcome to the server!</green>");
 Component message = MiniMessage.miniMessage().deserialize(rawMessage);
 ```
 
-Untuk struktur config yang sangat kompleks, pertimbangkan menggunakan library **Configurate** (`org.spongepowered:configurate-yaml`) yang mendukung pemeliharaan komentar file YAML, schema validation, dan serialisasi otomatis ke record Java.
+For large configuration trees, consider using **Configurate** (`org.spongepowered:configurate-yaml`) which preserves file comments, validates schemas, and maps automatically to Java records.
 
 ---
 
-## 5. Ringkasan Checklist Anti-Pattern
+## 5. Anti-Pattern Summary Checklist
 
-| Jangan Lakukan ❌ | Lakukan Ini ✔️ |
+| Never Do This ❌ | Recommended Modern Pattern ✔️ |
 | :--- | :--- |
-| `ChatColor.RED + "Teks"` | `MiniMessage.miniMessage().deserialize("<red>Teks</red>")` |
+| `ChatColor.RED + "Text"` | `MiniMessage.miniMessage().deserialize("<red>Text</red>")` |
 | `player.sendMessage("§a...")` | `player.sendMessage(Component)` |
-| `new NamespacedKey(...)` di per-event loop | Simpan instance `NamespacedKey` sebagai `static final` |
-| `world.getBlockAt(x, y, z)` acak di async thread | Akses block hanya di thread region yang bersangkutan |
-| Mengabaikan `paper-plugin.yml` untuk plugin baru | Manfaatkan `paper-plugin.yml` dan `PluginBootstrap` |
-| Menahan koneksi database terbuka di main thread | Gunakan connection pool (seperti HikariCP) & query async |
-| Mengabaikan `folia-supported` | Rancang scheduler menggunakan abstraksi region / universal |
+| `new NamespacedKey(...)` in event loops | Define `NamespacedKey` instances as `static final` |
+| Random `world.getBlockAt(x, y, z)` in async threads | Access blocks exclusively on the owning region thread |
+| Ignoring `paper-plugin.yml` in new projects | Adopt `paper-plugin.yml` and `PluginBootstrap` |
+| Blocking the tick thread with database queries | Use connection pools (HikariCP) & async futures |
+| Omitting `folia-supported` declarations | Architect schedulers using region/universal abstractions |

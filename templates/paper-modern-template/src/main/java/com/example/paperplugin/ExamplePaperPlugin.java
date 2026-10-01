@@ -11,25 +11,25 @@ public final class ExamplePaperPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Simpan default configuration jika belum ada
+        // Save default configuration if missing
         saveDefaultConfig();
 
-        // Inisialisasi kunci PersistentDataContainer
+        // Initialize PersistentDataContainer keys
         PluginDataKeys.init(this);
 
-        // Registrasi Event Listener
+        // Register Event Listeners
         getServer().getPluginManager().registerEvents(new PlayerEventListener(this), this);
 
-        // Logging dengan ComponentLogger bawaan Paper
+        // Log startup using Paper's native ComponentLogger
         getComponentLogger().info(
-            Component.text("ExamplePaperPlugin aktif! Running on Folia: " + SchedulerAdapter.isFolia(), NamedTextColor.GREEN)
+            Component.text("ExamplePaperPlugin enabled! Running on Folia: " + SchedulerAdapter.isFolia(), NamedTextColor.GREEN)
         );
     }
 
     @Override
     public void onDisable() {
         getComponentLogger().info(
-            Component.text("ExamplePaperPlugin dinonaktifkan.", NamedTextColor.YELLOW)
+            Component.text("ExamplePaperPlugin disabled.", NamedTextColor.YELLOW)
         );
     }
 }

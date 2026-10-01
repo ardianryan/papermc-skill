@@ -1,14 +1,14 @@
-# Custom Items, Ability & Combat di Paper
+# Custom Items, Abilities & Combat in Paper
 
-Membuat item kustom dengan kemampuan sihir atau skill khusus (seperti tongkat sihir petir, pedang lifesteal, atau bow peledak) adalah fitur paling favorit di server RPG dan Mini-games.
+Crafting custom items with magical abilities and combat mechanics (such as lightning wands, lifesteal swords, or explosive bows) is a hallmark of modern RPG and minigame servers.
 
-Paper menyediakan API native untuk raycasting, particle, cooldown visual vanilla, dan Adventure sound effects tanpa perlu library eksternal.
+Paper provides native APIs for entity raycasting, particle trails, vanilla visual cooldown animations, and Adventure sound effects without external library dependencies.
 
 ---
 
-## 1. Anatomi Custom Item dengan PDC
+## 1. Anatomy of a Custom Item with PDC
 
-Selalu identifikasi item kustom menggunakan `PersistentDataContainer` (PDC), bukan nama atau lore yang bisa dipalsukan pemain via Anvil:
+Always identify custom items using `PersistentDataContainer` (PDC) rather than displayName or lore strings which players can forge via an Anvil:
 
 ```java
 package com.example.plugin.item;
@@ -17,7 +17,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
@@ -29,18 +28,15 @@ public final class CustomItemFactory {
 
     public static ItemStack createLightningWand() {
         ItemStack item = new ItemStack(Material.BLAZE_ROD);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.displayName(MiniMessage.miniMessage().deserialize("<gradient:#ffe259:#ffa751><bold>Tongkat Petir Kuno</bold></gradient>"));
+        item.editMeta(meta -> {
+            meta.displayName(MiniMessage.miniMessage().deserialize("<gradient:#ffe259:#ffa751><bold>Ancient Lightning Wand</bold></gradient>"));
             meta.lore(List.of(
-                MiniMessage.miniMessage().deserialize("<gray>Klik kanan untuk menembakkan <yellow>Petir Murni</yellow>.</gray>"),
-                MiniMessage.miniMessage().deserialize("<dark_gray>Cooldown: <gold>3 Detik</gold></dark_gray>")
+                MiniMessage.miniMessage().deserialize("<gray>Right-click to discharge <yellow>Pure Lightning</yellow>.</gray>"),
+                MiniMessage.miniMessage().deserialize("<dark_gray>Cooldown: <gold>3 Seconds</gold></dark_gray>")
             ));
 
-            // Tandai ID item
             meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "lightning_wand");
-            item.setItemMeta(meta);
-        }
+        });
         return item;
     }
 }
@@ -48,37 +44,35 @@ public final class CustomItemFactory {
 
 ---
 
-## 2. Sistem Cooldown: Visual Vanilla vs Timestamp
+## 2. Cooldown Management: Visual Vanilla Animations
 
-Minecraft memiliki API bawaan untuk menampilkan cooldown visual (animasi abu-abu berputar pada hotbar slot):
+Minecraft features a native client API to render visual cooldown overlays (the sweeping gray overlay on hotbar slots):
 
 ```java
-// Memberikan cooldown visual vanilla selama 60 tick (3 detik) pada Blaze Rod
+// Apply a 60-tick (3-second) vanilla cooldown to Blaze Rods
 player.setCooldown(Material.BLAZE_ROD, 60);
 
-// Memeriksa apakah pemain sedang dalam cooldown
+// Query if cooldown is active
 if (player.hasCooldown(Material.BLAZE_ROD)) {
-    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Kemampuan masih cooldown!</red>"));
+    player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Ability is on cooldown!</red>"));
     return;
 }
 ```
 
 ---
 
-## 3. Raycasting Entitas & Partikel (Skill Sihir)
+## 3. Entity Raycasting & Particle Beams
 
-Raycasting digunakan untuk mendeteksi apa yang sedang dibidik pemain secara presisi menggunakan `World#rayTraceEntities` atau kalkulasi vektor:
+Raycasting detects target entities along the player's line of sight using `World#rayTraceEntities`:
 
 ```java
 package com.example.plugin.item;
 
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
@@ -113,16 +107,15 @@ public final class CustomItemListener implements Listener {
         event.setCancelled(true);
         Player player = event.getPlayer();
 
-        // 1. Cek Cooldown
+        // 1. Check Cooldown
         if (player.hasCooldown(Material.BLAZE_ROD)) {
-            player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Tunggu sejenak sebelum menembak lagi!</red>"));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<red>Ability cooling down!</red>"));
             return;
         }
 
-        // Set cooldown 3 detik (60 ticks)
         player.setCooldown(Material.BLAZE_ROD, 60);
 
-        // 2. Eksekusi Efek Serangan
+        // 2. Execute Spell Effect
         castLightningBeam(player);
     }
 
@@ -131,7 +124,7 @@ public final class CustomItemListener implements Listener {
         Location eyeLoc = player.getEyeLocation();
         Vector direction = eyeLoc.getDirection().normalize();
 
-        // Putar suara tembakan sihir
+        // Play cast sound
         player.playSound(Sound.sound(
             org.bukkit.Sound.ENTITY_ILLUSIONER_CAST_SPELL.key(),
             Sound.Source.PLAYER,
@@ -139,13 +132,13 @@ public final class CustomItemListener implements Listener {
             1.5f
         ));
 
-        // Partikel beam sepanjang garis pandang (hingga 30 blok)
+        // Spawn particle line (up to 30 blocks)
         for (double d = 1; d <= 30; d += 0.5) {
             Location point = eyeLoc.clone().add(direction.clone().multiply(d));
             world.spawnParticle(Particle.ELECTRIC_SPARK, point, 2, 0.05, 0.05, 0.05, 0.01);
         }
 
-        // Raytrace entitas yang terkena garis tembakan
+        // Raytrace entities colliding with beam
         RayTraceResult result = world.rayTraceEntities(
             eyeLoc,
             direction,
@@ -158,13 +151,12 @@ public final class CustomItemListener implements Listener {
             Entity target = result.getHitEntity();
             Location hitLoc = target.getLocation();
 
-            // Panggil sambaran petir visual & berikan damage
             world.strikeLightningEffect(hitLoc);
             if (target instanceof Damageable damageable) {
-                damageable.damage(8.0, player); // 8 damage = 4 hati
+                damageable.damage(8.0, player); // 8 damage = 4 hearts
             }
 
-            player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Tembakan Mengenai Target!</yellow>"));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>Target struck!</yellow>"));
         }
     }
 }

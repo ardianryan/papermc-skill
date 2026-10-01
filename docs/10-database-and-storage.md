@@ -1,32 +1,32 @@
-# Penyimpanan Database Asinkron: SQLite & HikariCP di Paper
+# Asynchronous Database Storage: SQLite & HikariCP in Paper
 
-Menyimpan data pemain (uang/ekonomi, statistik level, inventaris kustom, quest) langsung ke file YAML (`config.yml` atau `player.yml`) sering kali menjadi lambat dan berisiko korup jika server memiliki ribuan pemain unik.
+Storing player profiles (economy balances, levels, custom inventories, quests) directly into YAML files (`config.yml` or `player.yml`) degrades performance rapidly and invites file corruption when scaling to thousands of unique users.
 
-Standar industri untuk penyimpanan data di plugin produksi adalah menggunakan database relasional (seperti **SQLite** untuk server mandiri, atau **MySQL/PostgreSQL via HikariCP** untuk jaringan multi-server/BungeeCord).
-
----
-
-## 1. Aturan Emas Database di Minecraft
-
-> **DILARANG KERAS menjalankan koneksi database, query `SELECT`, atau `INSERT/UPDATE` di main/region tick thread.**
-> Query yang memakan waktu 50ms akan langsung menyebabkan TPS server turun dan pemain mengalami lag atau rollback.
-
-Gunakan selalu **Asynchronous Execution (`CompletableFuture`)** yang me-return hasil ke thread region pemain saat selesai.
+The industry standard for production storage is relational databases (**SQLite** for standalone single servers, or **MySQL / PostgreSQL via HikariCP** for multi-server BungeeCord/Velocity networks).
 
 ---
 
-## 2. Menyiapkan HikariCP (Connection Pooling)
+## 1. The Golden Rule of Minecraft Database Access
 
-HikariCP adalah library connection pool tercepat di ekosistem Java (digunakan secara ekstensif oleh **LuckPerms**).
+> **NEVER open database connections, execute `SELECT` queries, or run `INSERT/UPDATE` statements on the main or region tick threads.**
+> A single query taking 50ms immediately causes TPS drops, player rubberbanding, and tick watchdog warnings.
 
-### Dependensi Gradle:
+Always execute database operations via **Asynchronous Threads (`CompletableFuture`)**, and dispatch results back to the player's entity scheduler when mutating game state.
+
+---
+
+## 2. Configuring HikariCP (High-Performance Connection Pooling)
+
+HikariCP is the fastest connection pool in the Java ecosystem (utilized extensively by **LuckPerms**).
+
+### Gradle Dependency:
 ```kotlin
 dependencies {
     implementation("com.zaxxer:HikariCP:5.1.0")
 }
 ```
 
-### Inisialisasi DataSource:
+### Initializing the DataSource:
 ```java
 package com.example.plugin.database;
 
@@ -46,12 +46,12 @@ public final class DatabaseManager {
         config.setUsername(user);
         config.setPassword(password);
 
-        // Pengaturan Pool HikariCP yang Direkomendasikan
+        // Recommended HikariCP Pool Settings
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
-        config.setConnectionTimeout(10000); // 10 detik
-        config.setIdleTimeout(600000);      // 10 menit
-        config.setMaxLifetime(1800000);     // 30 menit
+        config.setConnectionTimeout(10000); // 10 seconds
+        config.setIdleTimeout(600000);      // 10 minutes
+        config.setMaxLifetime(1800000);     // 30 minutes
         config.setPoolName("PluginHikariPool");
 
         this.dataSource = new HikariDataSource(config);
@@ -60,7 +60,7 @@ public final class DatabaseManager {
     public void initSQLite(String filePath) {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:sqlite:" + filePath);
-        config.setMaximumPoolSize(1); // SQLite hanya boleh 1 writer pool
+        config.setMaximumPoolSize(1); // SQLite only supports a single writer
         config.setPoolName("PluginSQLitePool");
 
         this.dataSource = new HikariDataSource(config);
@@ -80,9 +80,9 @@ public final class DatabaseManager {
 
 ---
 
-## 3. Repositori Asinkron dengan `CompletableFuture`
+## 3. Asynchronous DAO Pattern with `CompletableFuture`
 
-Buat Data Access Object (DAO) yang memisahkan eksekusi SQL dari logika game:
+Construct a Data Access Object (DAO) to cleanly decouple raw SQL execution from in-game mechanics:
 
 ```java
 package com.example.plugin.database;
@@ -120,7 +120,7 @@ public final class PlayerRepository {
         }
     }
 
-    // Membaca data pemain secara asinkron
+    // Read player balance asynchronously
     public CompletableFuture<Integer> getCoinsAsync(UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = databaseManager.getConnection();
@@ -136,17 +136,17 @@ public final class PlayerRepository {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-            return 0; // Default jika data belum ada
+            return 0; // Default fallback
         }, dbExecutor);
     }
 
-    // Menyimpan data pemain secara asinkron (Upsert)
+    // Persist player balance asynchronously
     public CompletableFuture<Void> setCoinsAsync(UUID uuid, int coins) {
         return CompletableFuture.runAsync(() -> {
             try (Connection conn = databaseManager.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
                      "INSERT INTO player_data (uuid, coins) VALUES (?, ?) " +
-                     "ON CONFLICT(uuid) DO UPDATE SET coins = excluded.coins;" // SQLite & Postgres (gunakan ON DUPLICATE KEY UPDATE untuk MySQL)
+                     "ON CONFLICT(uuid) DO UPDATE SET coins = excluded.coins;" // SQLite / PostgreSQL
                  )) {
                 stmt.setString(1, uuid.toString());
                 stmt.setInt(2, coins);
@@ -165,21 +165,21 @@ public final class PlayerRepository {
 
 ---
 
-## 4. Menggunakan Hasil Database di Event Listener
+## 4. Applying Query Results in Event Listeners
 
-Saat data selesai di-fetch dari database, gunakan scheduler Folia/Paper pemain untuk menerapkan perubahannya ke objek Bukkit:
+When asynchronous database queries resolve, schedule execution back to the player's entity scheduler to mutate Bukkit state:
 
 ```java
 @EventHandler
 public void onPlayerJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
 
-    // Fetch data koin di thread asinkron
+    // Fetch coins asynchronously off the tick thread
     playerRepository.getCoinsAsync(player.getUniqueId()).thenAccept(coins -> {
-        // Terapkan hasil ke entity pemain di thread region pemain
+        // Dispatch result safely onto the player's entity region thread
         player.getScheduler().run(plugin, task -> {
             player.sendActionBar(MiniMessage.miniMessage().deserialize(
-                "<gold>Saldo Koin: <yellow>" + coins + "</yellow></gold>"
+                "<gold>Balance: <yellow>" + coins + " Coins</yellow></gold>"
             ));
         }, null);
     });

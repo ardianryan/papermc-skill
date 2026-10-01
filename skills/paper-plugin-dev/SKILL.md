@@ -1,91 +1,91 @@
 ---
 name: paper-plugin-dev
-description: Expert guidelines, modern standards, exploit-prevention blueprints, and architectural patterns for developing production-grade Minecraft Java plugins using PaperMC API (1.20-1.21+ / 26.x), Folia (Threaded Regions), Adventure API, MiniMessage, and Data Components.
+description: Expert guidelines, modern architectural blueprints, exploit-prevention patterns, and best practices for developing production-grade Minecraft Java plugins using PaperMC API (1.20-1.21+ / 26.x), Folia (Threaded Regions), Adventure API, MiniMessage, and Data Components.
 ---
 
 # Paper & Folia Minecraft Plugin Development Skill
 
-Skill ini adalah standar acuan arsitektur tingkat lanjut, pedoman keamanan tingkat tinggi (*exploit-proof*), dan katalog pola desain modern untuk mengembangkan plugin Minecraft Java Server berbasis **PaperMC (1.20.6, 1.21+ hingga 26.x)** dan **Folia (Regionized Multi-Threading)**.
+This skill provides authoritative architectural standards, high-level exploit-prevention blueprints, and modern design patterns for building and auditing Minecraft Java server plugins based on **PaperMC (1.20.6, 1.21+ through 26.x)** and **Folia (Regionized Multi-Threading)**.
 
 ---
 
-## 1. Prasyarat Lingkungan & Matriks Kompatibilitas
+## 1. Environment Prerequisites & Compatibility Matrix
 
-| Komponen | Standar Minimum | Rekomendasi Terkini | Catatan Kritis |
+| Component | Minimum Standard | Current Recommendation | Critical Notes |
 | :--- | :--- | :--- | :--- |
-| **Java SDK** | **Java 21 (LTS)** | **Java 21 LTS** / Java 25 Ready | Minecraft 1.20.5+ dan Paper modern **wajib** Java 21+. Target Paper 26.x membutuhkan Java 25+. |
-| **Build Tool** | Gradle 8.10+ | **Gradle 9.7+ (Kotlin DSL)** | Gunakan `jvmToolchain(21)` dan `pluginManagement { mavenCentral() }`. |
-| **Paper API** | `1.21.4-R0.1-SNAPSHOT` | `1.21.11-R0.1-SNAPSHOT` | Repositori: `https://repo.papermc.io/repository/maven-public/` |
-| **API Discovery** | Manual | **PaperMC Fill v3 API** | Query versi real-time via `https://fill.papermc.io/v3/projects/paper`. |
-| **Text Handling** | Adventure 4.17+ | **Kyori Adventure + MiniMessage** | Jangan pernah menggunakan `org.bukkit.ChatColor` atau simbol `§`. |
+| **Java SDK** | **Java 21 (LTS)** | **Java 21 LTS** / Java 25 Ready | Minecraft 1.20.5+ and modern Paper **require** Java 21+. Target Paper 26.x requires Java 25+. |
+| **Build Tool** | Gradle 8.10+ | **Gradle 9.7+ (Kotlin DSL)** | Use `jvmToolchain(21)` and `pluginManagement { mavenCentral() }`. |
+| **Paper API** | `1.21.4-R0.1-SNAPSHOT` | `1.21.11-R0.1-SNAPSHOT` | Repository: `https://repo.papermc.io/repository/maven-public/` |
+| **API Discovery** | Manual | **PaperMC Fill v3 API** | Query real-time versions via `https://fill.papermc.io/v3/projects/paper`. |
+| **Text Handling** | Adventure 4.17+ | **Kyori Adventure + MiniMessage** | Never use `org.bukkit.ChatColor` or the legacy section sign `§`. |
 
 ---
 
-## 2. Alur Kerja Standar (Workflow) AI Coding Agent
+## 2. Standard AI Coding Agent Workflow
 
-Ketika diminta membuat, memodifikasi, atau mereview kode plugin Paper/Folia:
+When requested to scaffold, modify, or review a Paper/Folia plugin codebase:
 
-1. **Periksa Versi & Target Lingkungan (Discovery)**:
-   - Jalankan `npx papermc-skill check-update` atau query API Fill v3 untuk memastikan versi build PaperMC dan Java yang ditargetkan.
-2. **Tetapkan Manifest Modern (`paper-plugin.yml`)**:
-   - Wajib mendeklarasikan `folia-supported: true`.
-   - Gunakan `bootstrapper:` untuk inisialisasi lifecycle dan pendaftaran Brigadier commands.
-3. **Pilih Arsitektur Concurrency yang Aman**:
-   - Jika menyentuh Entity atau Player: `player.getScheduler()`.
-   - Jika memodifikasi Block, World, atau Chunk: `RegionScheduler`.
-   - Jika global server state: `GlobalRegionScheduler`.
-   - Jika Database, File I/O, Web Request, atau perhitungan berat: `AsyncScheduler` atau `CompletableFuture`.
-4. **Terapkan Pertahanan Keamanan & Anti-Exploit (Wajib)**:
-   - Validasi input angka (cegah `NaN`, `Infinity`, overflow, dan angka negatif).
-   - Lindungi transaksi inventory dari click-spam dan cursor race conditions.
-   - Gunakan `UUID` bukan instance `Player` pada semua state/cache memori.
-   - Amankan data kustom pada item menggunakan `PersistentDataContainer` (PDC).
-5. **Kompilasi & Validasi Bersih**:
-   - Pastikan kode lulus kompilasi tanpa warning deprecation kritis.
+1. **Version Discovery & Target Verification**:
+   - Run `npx papermc-skill check-update` or query the Fill v3 API to determine current supported Paper builds and minimum Java requirements.
+2. **Configure Modern Plugin Manifest (`paper-plugin.yml`)**:
+   - Must declare `folia-supported: true`.
+   - Specify `bootstrapper:` for early lifecycle handling and Brigadier command registration.
+3. **Select Safe Concurrency Architecture**:
+   - Entity or Player state: `player.getScheduler()`.
+   - Block, World, or Chunk state: `RegionScheduler`.
+   - Global server state or announcements: `GlobalRegionScheduler`.
+   - Database, File I/O, Web Requests, or compute-heavy math: `AsyncScheduler` or `CompletableFuture`.
+4. **Enforce Exploit & Dupe Prevention Protocols (Mandatory)**:
+   - Validate numeric user input (reject `NaN`, `Infinity`, overflow, and negative amounts).
+   - Protect inventory menus against click-spam race conditions via debounce.
+   - Store `UUID` rather than `Player` instances across all caches and static collections.
+   - Secure custom items using `PersistentDataContainer` (PDC) signatures.
+5. **Compile & Lint Verification**:
+   - Verify build passes clean compilation with zero deprecation warnings.
 
 ---
 
-## 3. Protokol Keamanan & Anti-Exploit (Production-Grade Security)
+## 3. Production Security & Exploit-Prevention Protocols
 
-### A. Eliminasi Dupe & Transaksi Inventori Aman
-Eksploitasi duplikasi item paling umum terjadi akibat *race condition* antara klik cepat, drag item, menutup inventory, atau manipulasi asinkron.
-- **Aturan Mutlak**: Jangan pernah memodifikasi `Inventory` atau `ItemStack` pemain dari dalam thread asinkron! Selalu jalankan di thread region pemain (`player.getScheduler()`).
-- **Debounce Click Spam**: Berikan batasan waktu (misal 150-200ms) antar-aksi klik pada GUI kustom untuk mencegah eksploitasi auto-clicker.
-- **Handling Cursor Saat Menu Ditutup**: Jika menu kustom ditutup paksa (`InventoryCloseEvent` atau disconnect), pastikan item di cursor pemain tidak hilang atau berduplikasi.
+### A. Item Duplication & Inventory Transaction Safety
+Duplication glitches almost always stem from race conditions across inventory events or async state mutations:
+- **Absolute Rule**: Never modify a player's `Inventory` or `ItemStack` from an asynchronous thread! Always dispatch inventory mutations onto the player's entity scheduler (`player.getScheduler()`).
+- **Debounce Click Spam**: Enforce a cooldown (e.g., 150-200ms) between clicks on custom GUIs to stop auto-clicker exploits.
+- **Cursor Item Handling**: When a custom menu closes unexpectedly (`InventoryCloseEvent` or disconnection), ensure items on the player's cursor are safely returned to inventory rather than lost or duplicated.
 
-### B. Sanitasi Angka & Validasi Ekonomi (Anti-Overflow & NaN Injection)
-Banyak plugin ekonomi dan RPG jebol karena pemain memasukkan input seperti `/pay Player NaN`, `/pay Player -1000000`, atau angka melebihi batas 64-bit integer.
-- Selalu gunakan `BigDecimal` atau integer berbasis *cents* (sen) untuk saldo uang.
-- Selalu tolak:
+### B. Economy & Numeric Input Sanitization (Anti-NaN & Anti-Overflow)
+Many economy plugins suffer catastrophic exploits when players supply inputs like `/pay Player NaN`, `/pay Player -1000000`, or values exceeding standard 64-bit bounds:
+- Always use `BigDecimal` or cents-based integer values for monetary storage.
+- Always validate input:
   ```java
-  if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0.0) {
-      throw new IllegalArgumentException("Nilai nominal tidak valid!");
+  if (!Double.isFinite(amount) || amount <= 0.0) {
+      throw new IllegalArgumentException("Invalid transaction amount!");
   }
   ```
 
 ### C. PDC Anti-Tamper & Cryptographic Hashing
-Pemain dengan client cheat atau akses anvil/crafting terkadang mencoba memalsukan nama kustom lore untuk meniru item langka.
-- **Solusi**: Jangan pernah mengenali item khusus dari `DisplayName` atau `Lore`!
-- Simpan ID permanen di `PersistentDataContainer` (PDC).
-- Untuk item bernilai tinggi, sertakan *signature token* sederhana (misal hash HMAC dari server salt + item UUID) di PDC agar client tidak bisa memalsukan metadata via bug NBT paket.
+Cheating clients or players using anvils/crafting tables often attempt to forge custom item lore to impersonate rare server gear.
+- **Rule**: Never identify a custom item by its `DisplayName` or `Lore`!
+- Store immutable identifiers inside `PersistentDataContainer` (PDC).
+- For high-value items, append an internal server HMAC hash or unique identifier to verify data integrity.
 
-### D. Mencegah DoS Melalui Synchronous Chunk Loading
-Memanggil `world.getBlockAt(x, y, z)` pada koordinat yang belum dimuat (misal koordinat 30,000,000) akan membekukan server selama ratusan milidetik.
-- Selalu periksa `world.isChunkLoaded(x >> 4, z >> 4)` sebelum akses synchronous, atau gunakan:
+### D. Preventing Denial of Service via Synchronous Chunk Loading
+Invoking `world.getBlockAt(x, y, z)` on ungenerated/unloaded far chunks (e.g., coordinate 30,000,000) freezes the entire main server thread for hundreds of milliseconds.
+- Always check `world.isChunkLoaded(chunkX, chunkZ)` prior to synchronous access, or load asynchronously:
   ```java
-  world.getChunkAtAsync(x >> 4, z >> 4).thenAccept(chunk -> { ... });
+  world.getChunkAtAsync(chunkX, chunkZ).thenAccept(chunk -> { ... });
   ```
 
-### E. Mencegah SQL Injection & Kebocoran Pool Database
-- Jangan pernah menyambung string query SQL secara langsung (`"SELECT * WHERE name = '" + input + "'"`).
-- Wajib menggunakan `PreparedStatement` dengan placeholder tanda tanya (`?`).
-- Selalu gunakan connection pool (seperti **HikariCP**) dan bungkus dalam `try-with-resources` agar koneksi selalu dikembalikan ke pool.
+### E. SQL Injection Defense & Pool Leak Prevention
+- Never concatenate raw user input into SQL queries (`"SELECT * FROM users WHERE name = '" + input + "'"`).
+- Always use `PreparedStatement` with placeholder queries (`?`).
+- Use connection pooling (**HikariCP**) enclosed in `try-with-resources` blocks so connections return cleanly to the pool.
 
 ---
 
-## 4. Katalog Resep Kode Modern (Production Recipes)
+## 4. Modern Production Recipes
 
-### Resep 1: Manifest Modern Folia-Ready (`src/main/resources/paper-plugin.yml`)
+### Recipe 1: Folia-Ready Modern Manifest (`src/main/resources/paper-plugin.yml`)
 ```yaml
 name: EpicPaperPlugin
 version: '1.0.0'
@@ -96,13 +96,10 @@ folia-supported: true
 authors:
   - DeveloperName
 description: Production-grade Paper & Folia plugin built with modern architectural standards.
-dependencies:
-  server:
-    # Deklarasikan dependensi server jika ada (Vault, LuckPerms, dll)
 ```
 
-### Resep 2: Lifecycle Bootstrap & Modern Brigadier Command
-Gunakan Paper Lifecycle Events (Minecraft 1.20.6+ / 1.21+) tanpa memerlukan deklarasi command di file `plugin.yml`:
+### Recipe 2: Bootstrap Lifecycle & Modern Brigadier Command
+Register commands through Paper's Lifecycle Events (Minecraft 1.20.6+ / 1.21+) without needing command entries in `plugin.yml`:
 
 ```java
 package com.example.plugin;
@@ -137,21 +134,21 @@ public class EpicPluginBootstrap implements PluginBootstrap {
                                 String target = StringArgumentType.getString(ctx, "target");
                                 double amount = DoubleArgumentType.getDouble(ctx, "amount");
 
-                                // Sanitasi keamanan ketat
-                                if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
-                                    sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Jumlah transfer tidak valid!</red>"));
+                                // Strict security sanitization
+                                if (!Double.isFinite(amount) || amount <= 0) {
+                                    sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Invalid payment amount!</red>"));
                                     return Command.SINGLE_SUCCESS;
                                 }
 
                                 sender.sendMessage(MiniMessage.miniMessage().deserialize(
-                                    "<green>Mengirim <gold>$" + String.format("%.2f", amount) + "</gold> ke <yellow>" + target + "</yellow>!</green>"
+                                    "<green>Sent <gold>$" + String.format("%.2f", amount) + "</gold> to <yellow>" + target + "</yellow>!</green>"
                                 ));
                                 return Command.SINGLE_SUCCESS;
                             })
                         )
                     )
                     .build(),
-                "Transfer saldo aman dengan validasi anti-overflow",
+                "Secure player payment with anti-overflow validation",
                 List.of("paysecure")
             );
         });
@@ -159,11 +156,10 @@ public class EpicPluginBootstrap implements PluginBootstrap {
 }
 ```
 
-### Resep 3: Sistem PDC Anti-Eksploitasi & Item Builder
+### Recipe 3: Anti-Tamper PDC Item Utilities
 ```java
 package com.example.plugin.util;
 
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -193,7 +189,6 @@ public final class SafeItemUtil {
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             pdc.set(KEY_ITEM_ID, PersistentDataType.STRING, customId);
             pdc.set(KEY_LEVEL, PersistentDataType.INTEGER, level);
-            // Tambahkan identifier internal acak
             pdc.set(KEY_SIG, PersistentDataType.STRING, UUID.randomUUID().toString());
         });
         return item;
@@ -207,7 +202,7 @@ public final class SafeItemUtil {
 }
 ```
 
-### Resep 4: Controller GUI Menu Anti-Dupe dengan Debounce
+### Recipe 4: Anti-Dupe GUI Controller with Debounce
 ```java
 package com.example.plugin.gui;
 
@@ -247,32 +242,31 @@ public class SafeMenuController implements InventoryHolder, Listener {
             return;
         }
 
-        // 1. Selalu batalkan pergerakan item
+        // 1. Always cancel item movement
         event.setCancelled(true);
 
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
 
-        // 2. Proteksi Click Spam (Debounce 200ms)
+        // 2. Click-spam protection (200ms debounce)
         long now = System.currentTimeMillis();
         long lastClick = clickDebounce.getOrDefault(player.getUniqueId(), 0L);
         if (now - lastClick < 200) {
-            return; // Abaikan click spam
+            return;
         }
         clickDebounce.put(player.getUniqueId(), now);
 
-        // 3. Batasi hanya slot inventory menu
+        // 3. Process only top menu clicks
         if (event.getClickedInventory() == event.getInventory()) {
-            int slot = event.getSlot();
-            handleSlotAction(player, slot);
+            handleSlotAction(player, event.getSlot());
         }
     }
 
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
         if (event.getInventory().getHolder() instanceof SafeMenuController) {
-            event.setCancelled(true); // Cegah eksploitasi drag-dupe
+            event.setCancelled(true);
         }
     }
 
@@ -284,13 +278,13 @@ public class SafeMenuController implements InventoryHolder, Listener {
     }
 
     private void handleSlotAction(Player player, int slot) {
-        // Eksekusi aksi tombol sesuai slot
+        // Handle slot action safely
     }
 }
 ```
 
-### Resep 5: Universal Folia & Paper Scheduler Adapter
-Adapter yang 100% aman dijalankan baik di server Paper standar maupun di server Folia bertingkat multi-region:
+### Recipe 5: Universal Folia & Paper Scheduler Adapter
+Transparently dispatches execution safely whether running on standard Paper or multi-threaded Folia:
 
 ```java
 package com.example.plugin.util;
@@ -301,7 +295,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public final class UniversalScheduler {
 
@@ -322,7 +315,7 @@ public final class UniversalScheduler {
         return IS_FOLIA;
     }
 
-    /** Menjalankan task yang terikat pada region spesifik entity */
+    /** Dispatches a task to the region scheduler owning the specified entity */
     public static void runForEntity(Plugin plugin, Entity entity, Runnable runnable) {
         if (IS_FOLIA) {
             entity.getScheduler().run(plugin, task -> runnable.run(), null);
@@ -331,7 +324,7 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Menjalankan task pada koordinat blok tertentu (chunk region) */
+    /** Dispatches a task to the region scheduler owning the specified location */
     public static void runAtLocation(Plugin plugin, Location location, Runnable runnable) {
         if (IS_FOLIA) {
             Bukkit.getRegionScheduler().execute(plugin, location, runnable);
@@ -340,7 +333,7 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Menjalankan task asinkron murni (I/O, Database, Network) */
+    /** Dispatches a purely asynchronous task (I/O, database, networking) */
     public static void runAsync(Plugin plugin, Runnable runnable) {
         if (IS_FOLIA) {
             Bukkit.getAsyncScheduler().runNow(plugin, task -> runnable.run());
@@ -349,19 +342,19 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Menjalankan task asynchronous dengan delay */
+    /** Dispatches a delayed asynchronous task */
     public static void runAsyncDelayed(Plugin plugin, Runnable runnable, long delayMs) {
         if (IS_FOLIA) {
             Bukkit.getAsyncScheduler().runDelayed(plugin, task -> runnable.run(), delayMs, TimeUnit.MILLISECONDS);
         } else {
-            long ticks = Math.max(1, delayMs / 50);
+            long ticks = Math.max(1L, delayMs / 50L);
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticks);
         }
     }
 }
 ```
 
-### Resep 6: Database Async Tangguh (HikariCP Connection Pool)
+### Recipe 6: Robust Asynchronous Database Access (HikariCP)
 ```java
 package com.example.plugin.database;
 
@@ -423,32 +416,32 @@ public class DatabaseManager {
 
 ---
 
-## 5. Matriks Anti-Patterns vs Solusi Mutakhir
+## 5. Anti-Patterns vs Modern Standards
 
-| Jangan Pernah Dilakukan ❌ | Alasan Bahaya ⚠️ | Cara yang Benar & Aman ✔️ |
+| Never Do This ❌ | Hazard / Vulnerability ⚠️ | Safe Modern Pattern ✔️ |
 | :--- | :--- | :--- |
-| `ChatColor.RED + "Pesan"` | Deprecated & merusak formatting console/modern client | `MiniMessage.miniMessage().deserialize("<red>Pesan</red>")` |
-| `public static Set<Player> list;` | Menyebabkan **Memory Leak** gigabyte data dunia/koneksi | `public static Set<UUID> list;` |
-| `world.getChunkAt(x, z)` acak di loop | Membekukan main tick server (TPS drop masif) | `world.getChunkAtAsync(x, z)` |
-| `Bukkit.getScheduler()` di Folia | Melemparkan exception atau merusak sinkronisasi region | Gunakan `RegionScheduler` atau `UniversalScheduler` |
-| Mengubah inventory di thread async | Menyebabkan duplikasi item (*concurrency corruption*) | Selalu jadwalkan modifikasi inventori di thread region |
-| Membaca string SQL langsung | Rawan **SQL Injection** berbahaya | Selalu gunakan `PreparedStatement` dengan parameter `?` |
-| `new NamespacedKey(...)` di loop/hit | Alokasi objek sampah tinggi di memori GC | Buat konstanta `public static final NamespacedKey` |
-| Mempercayai displayName/lore item | Pemain bisa memalsukan item via anvil/client cheat | Selalu simpan dan verifikasi metadata via **PDC** |
-| Angka tanpa batas di command ekonomi | Rawan input `NaN`, negatif, dan integer overflow | Validasi `Double.isFinite()` dan batasi rentang minimal/maksimal |
+| `ChatColor.RED + "Message"` | Deprecated & breaks console/client formatting | `MiniMessage.miniMessage().deserialize("<red>Message</red>")` |
+| `public static Set<Player> list;` | Causes massive **Memory Leaks** of worlds & connections | `public static Set<UUID> list;` |
+| `world.getChunkAt(x, z)` in a loop | Freezes main server tick thread (major TPS drops) | `world.getChunkAtAsync(x, z)` |
+| `Bukkit.getScheduler()` on Folia | Throws exception or causes thread-safety desync | Use `RegionScheduler`, `EntityScheduler`, or `UniversalScheduler` |
+| Modifying inventories asynchronously | Causes item duplication and memory corruption | Always dispatch inventory modifications to entity region thread |
+| Concatenating raw SQL queries | High vulnerability to **SQL Injection** | Always use `PreparedStatement` with `?` parameters |
+| `new NamespacedKey(...)` in event loops | Excessive GC allocation pressure | Define constants as `public static final NamespacedKey` |
+| Relying on item displayName/lore | Easily forged via anvils or modified clients | Always verify identity and attributes via **PDC** |
+| Unbounded numbers in economy commands | Susceptible to `NaN`, negative amounts, and overflow | Validate `Double.isFinite()` and enforce minimum/maximum boundaries |
 
 ---
 
-## 6. Daftar Periksa (Audit Checklist) Sebelum Release Plugin
+## 6. Pre-Release Security Audit Checklist
 
-Sebelum merilis build plugin ke production atau server publik, pastikan:
+Prior to releasing a plugin to production or public servers:
 
-- [ ] `paper-plugin.yml` terdefinisi dengan `folia-supported: true`.
-- [ ] Tidak ada referensi ke `org.bukkit.ChatColor` di seluruh codebase.
-- [ ] Semua pendaftaran command menggunakan Brigadier modern (`LifecycleEvents.COMMANDS`).
-- [ ] Tidak ada penyimpanan langsung objek `Player`, `World`, atau `Entity` di static cache.
-- [ ] Semua operasi File, Database, dan HTTP berjalan 100% asinkron.
-- [ ] GUI kustom memiliki perlindungan `setCancelled(true)` dan sistem debounce klik.
-- [ ] Semua item kustom divalidasi via `PersistentDataContainer` (PDC).
-- [ ] Seluruh koneksi database menggunakan connection pool dengan `try-with-resources`.
-- [ ] File jar terkompilasi bersih menggunakan Gradle 9.x dengan target Java 21 LTS.
+- [ ] `paper-plugin.yml` is defined with `folia-supported: true`.
+- [ ] Zero references to `org.bukkit.ChatColor` across the codebase.
+- [ ] All command registration uses modern Brigadier (`LifecycleEvents.COMMANDS`).
+- [ ] No direct storage of `Player`, `World`, or `Entity` instances in static collections.
+- [ ] All File, Database, and HTTP operations execute 100% asynchronously.
+- [ ] Custom GUIs implement `setCancelled(true)` and click debounce cooldowns.
+- [ ] Custom items are identified and verified via `PersistentDataContainer` (PDC).
+- [ ] All database queries use connection pooling enclosed in `try-with-resources`.
+- [ ] Plugin compiles cleanly using Gradle 9.x targeting Java 21 LTS.

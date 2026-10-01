@@ -1,17 +1,17 @@
-# Command System Modern: Brigadier & Cloud di Paper
+# Modern Command Systems: Native Brigadier & Cloud in Paper
 
-Sistem command di Minecraft Java berevolusi signifikan. Metode lama Bukkit seperti `CommandExecutor`, `TabCompleter`, dan deklarasi perintah di `plugin.yml` kini digantikan oleh:
-1. **Paper Native Brigadier API** (diperkenalkan di Paper 1.20.6+ melalui `LifecycleEvents.COMMANDS`).
-2. **Incendo Cloud Framework** (`cloud-paper`): Standar industri untuk framework command berbasis anotasi / builder yang sangat fleksibel dan multi-platform.
+The Minecraft Java command system has evolved substantially. Legacy Bukkit patterns like `CommandExecutor`, `TabCompleter`, and command declarations in `plugin.yml` have been superseded by:
+1. **Paper Native Brigadier API** (introduced in Paper 1.20.6+ via `LifecycleEvents.COMMANDS`).
+2. **Incendo Cloud Framework** (`cloud-paper`): The enterprise standard for annotation-driven and builder-based multi-platform command handling.
 
 ---
 
 ## 1. Native Paper Brigadier Commands (Paper 1.20.6+)
 
-Mojang Brigadier adalah command dispatcher engine resmi Minecraft. Paper mengekspos API Brigadier secara langsung tanpa perlu hack NMS atau dependensi tambahan.
+Mojang Brigadier is Minecraft's official command dispatcher and parser engine. Paper exposes native Brigadier bindings directly without requiring NMS hacks or external shading.
 
-### Registrasi Melalui Lifecycle Events
-Command didaftarkan saat fase Bootstrap atau saat event `LifecycleEvents.COMMANDS` dipicu:
+### Registering Commands via Lifecycle Events
+Commands are registered during the Bootstrap phase or when the `LifecycleEvents.COMMANDS` event triggers:
 
 ```java
 package com.example.plugin;
@@ -24,7 +24,6 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.entity.Player;
 
 public final class CommandBootstrapper implements PluginBootstrap {
 
@@ -33,11 +32,11 @@ public final class CommandBootstrapper implements PluginBootstrap {
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final Commands commands = event.registrar();
 
-            // Membangun pohon syntax command /teleportzone <nama> [radius]
+            // Construct syntax tree: /teleportzone <name> [radius]
             commands.register(
                 Commands.literal("teleportzone")
                     .requires(source -> source.getSender().hasPermission("plugin.command.teleportzone"))
-                    .then(Commands.argument("nama", StringArgumentType.word())
+                    .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             builder.suggest("lobby");
                             builder.suggest("arena");
@@ -47,12 +46,12 @@ public final class CommandBootstrapper implements PluginBootstrap {
                         .then(Commands.argument("radius", IntegerArgumentType.integer(1, 100))
                             .executes(ctx -> {
                                 final CommandSourceStack source = ctx.getSource();
-                                final String zone = StringArgumentType.getString(ctx, "nama");
+                                final String zone = StringArgumentType.getString(ctx, "name");
                                 final int radius = IntegerArgumentType.getInteger(ctx, "radius");
 
                                 source.getSender().sendMessage(
                                     MiniMessage.miniMessage().deserialize(
-                                        "<green>Mempersiapkan teleportasi ke zona <gold>" + zone + "</gold> dengan radius <yellow>" + radius + "</yellow>!</green>"
+                                        "<green>Preparing teleportation to zone <gold>" + zone + "</gold> with radius <yellow>" + radius + "</yellow>!</green>"
                                     )
                                 );
                                 return com.mojang.brigadier.Command.SINGLE_SUCCESS;
@@ -60,43 +59,42 @@ public final class CommandBootstrapper implements PluginBootstrap {
                         )
                         .executes(ctx -> {
                             final CommandSourceStack source = ctx.getSource();
-                            final String zone = StringArgumentType.getString(ctx, "nama");
+                            final String zone = StringArgumentType.getString(ctx, "name");
                             source.getSender().sendMessage(
-                                MiniMessage.miniMessage().deserialize("<green>Teleportasi default ke zona <gold>" + zone + "</gold>!</green>")
+                                MiniMessage.miniMessage().deserialize("<green>Default teleportation to zone <gold>" + zone + "</gold>!</green>")
                             );
                             return com.mojang.brigadier.Command.SINGLE_SUCCESS;
                         })
                     )
                     .build(),
-                "Perintah teleportasi zona modern",
-                java.util.List.of("tpzone") // alias
+                "Modern zone teleportation command",
+                java.util.List.of("tpzone") // aliases
             );
         });
     }
 }
 ```
 
-### Keuntungan Paper Brigadier:
-- **Client-Side Syntax Highlighting**: Minecraft client dapat menandai teks merah saat syntax salah sebelum perintah ditekan.
-- **Auto Tab-Completion**: Tidak perlu menulis logika `TabCompleter` manual yang rumit.
-- **Validasi Tipe Otomatis**: Argument validasi otomatis ditangani (angka out-of-range otomatis ditolak).
+### Advantages of Native Paper Brigadier:
+- **Client-Side Syntax Highlighting**: Minecraft clients highlight syntax errors in real-time before sending the command packet.
+- **Automated Tab-Completion**: Eliminates complex manual `TabCompleter` string matching.
+- **Strict Argument Typing**: Automatically validates argument bounds and rejects invalid types.
 
 ---
 
 ## 2. Incendo Cloud Command Framework (`cloud-paper`)
 
-Untuk plugin yang membutuhkan dependensi injeksi, parsing objek otomatis (seperti `Player`, `OfflinePlayer`, `World`, `Duration`), dan command yang sangat banyak, **Cloud** adalah pilihan terpopuler.
+For large plugin codebases requiring dependency injection, automatic Bukkit argument parsing (`Player`, `OfflinePlayer`, `World`, `Duration`), and hundreds of sub-commands, **Incendo Cloud** is the leading solution.
 
-### Dependensi Gradle:
+### Gradle Dependencies:
 ```kotlin
 dependencies {
     implementation("org.incendo:cloud-paper:2.0.0-beta.10")
-    // atau cloud-annotations jika menyukai gaya @Command
     implementation("org.incendo:cloud-annotations:2.0.0-beta.10")
 }
 ```
 
-### Inisialisasi Cloud PaperCommandManager:
+### Initializing Cloud PaperCommandManager:
 ```java
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.execution.ExecutionCoordinator;
@@ -111,8 +109,7 @@ public class PluginCommands {
             ExecutionCoordinator.simpleCoordinator()
         );
 
-        // Daftarkan brigadier mapper jika didukung
-        if (manager.hasCapability(org.incendo.cloud.paper.PaperCommandManager.Capability.BRIGADIER)) {
+        if (manager.hasCapability(PaperCommandManager.Capability.BRIGADIER)) {
             manager.registerBrigadier();
         }
 
@@ -121,7 +118,7 @@ public class PluginCommands {
 }
 ```
 
-### Contoh Perintah dengan Cloud Builder:
+### Building Commands with Cloud:
 ```java
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.bukkit.parser.PlayerParser;
@@ -138,8 +135,8 @@ public void registerGiveRewardCommand(PaperCommandManager<CommandSender> manager
                 CommandSender sender = commandContext.sender();
                 Player target = commandContext.get("target");
 
-                target.sendMessage(MiniMessage.miniMessage().deserialize("<gold>Kamu menerima hadiah spesial!</gold>"));
-                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Hadiah terkirim ke " + target.getName() + ".</green>"));
+                target.sendMessage(MiniMessage.miniMessage().deserialize("<gold>You received a special reward!</gold>"));
+                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Reward dispatched to " + target.getName() + ".</green>"));
             })
     );
 }
@@ -147,11 +144,11 @@ public void registerGiveRewardCommand(PaperCommandManager<CommandSender> manager
 
 ---
 
-## 3. Komparasi: Kapan Memilih Apa?
+## 3. Comparison: When to Use Which?
 
-| Aspek | Paper Native Brigadier | Incendo Cloud |
+| Aspect | Paper Native Brigadier | Incendo Cloud |
 | :--- | :--- | :--- |
-| **Ukuran Jar** | Zero-dependency (bawaan Paper) | Menambahkan lib ~300KB-800KB (butuh shadow/relocate) |
-| **Kemudahan** | Cocok untuk command sederhana-menengah | Sangat baik untuk ratusan sub-command |
-| **Argument Parser** | Perlu mapping manual untuk tipe Bukkit | Built-in parser untuk Player, Location, Selector, dll |
-| **Portabilitas** | Hanya berjalan di Paper 1.20.6+ | Mendukung Velocity, Bungee, Fabric, Paper |
+| **Artifact Overhead** | Zero-dependency (built directly into Paper) | Adds ~300KB-800KB (requires shadowing & relocating) |
+| **Complexity Fit** | Best for small-to-medium command suites | Best for complex enterprise command structures |
+| **Parsers** | Requires manual mapping for Bukkit types | Built-in parsers for Players, Locations, Selectors, etc. |
+| **Portability** | Paper 1.20.6+ exclusive | Cross-platform (Velocity, BungeeCord, Fabric, Paper) |
