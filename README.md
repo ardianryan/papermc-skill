@@ -147,3 +147,6 @@ If this toolkit helped you or your server project, give this repository a **Star
 *Minecraft is a registered trademark of Mojang Synergies AB. This project is not affiliated with or endorsed by Mojang Synergies AB, Microsoft Corporation, or PaperMC.*
 
 </div>
+
+
+<!-- Security scan triggered at 2026-10-07 11:18:17 -->
