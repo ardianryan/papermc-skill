@@ -88,3 +88,4 @@ npx papermc-skill audit
 # Verify PaperMC version compatibility
 npx papermc-skill check-update
 ```
+

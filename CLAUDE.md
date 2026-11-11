@@ -25,3 +25,4 @@ When writing or refactoring Minecraft plugin code in this project, adhere strict
    - Identify custom items through `PersistentDataContainer` (PDC), never item names or lore.
 7. **Quality Gate**:
    - Run `npx papermc-skill audit` to verify compliance before concluding tasks.
+

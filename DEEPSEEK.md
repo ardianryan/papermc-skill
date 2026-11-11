@@ -16,3 +16,4 @@ Follow these production-grade principles when synthesizing or auditing Minecraft
    - Validate numerical arguments with `Double.isFinite()` and bounds.
    - Guard GUIs with a 200ms debounce map.
    - Run `npx papermc-skill audit` on code changes.
+

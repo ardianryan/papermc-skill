@@ -4,3 +4,4 @@
 - Use Display Entities with JOML Matrix4f transformations for holograms.
 - Adhere to Folia region-threading rules.
 - Audit security using `npx papermc-skill audit`.
+

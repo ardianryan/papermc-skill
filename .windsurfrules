@@ -5,3 +5,4 @@
 - Holograms: Use Display Entities (TextDisplay, ItemDisplay) with JOML Matrix4f transformations.
 - Concurrency: Folia region-safe scheduling (`player.getScheduler()`, `Bukkit.getRegionScheduler()`).
 - Security: Sanitize all inputs against NaN and negative bounds. Audit code using `npx papermc-skill audit`.
+

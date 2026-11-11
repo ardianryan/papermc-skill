@@ -21,3 +21,4 @@ When editing or generating code in this Minecraft plugin project:
   - Store `UUID` instead of `Player` references in static maps to avoid memory leaks.
   - Reject `NaN`, `Infinity`, and negative values in commands.
 - **Verification**: Run `npx papermc-skill audit` before finishing work.
+

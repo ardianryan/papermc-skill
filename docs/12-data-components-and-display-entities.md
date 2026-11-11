@@ -262,3 +262,4 @@ public final class ModernCombatListener implements Listener {
 2. **Clean Display Entity Lifecycles**: When removing holograms, always invoke `display.remove()` and clean up stored entity UUIDs. Never store `TextDisplay` references in static collections.
 3. **JOML Thread Safety**: `Matrix4f`, `Vector3f`, and `Transformation` are value objects. Create them locally on demand rather than sharing mutable instances across async threads.
 4. **Folia Compatibility**: Always execute `world.spawn(loc, Display.class, ...)` on the Folia region scheduler corresponding to `loc`.
+

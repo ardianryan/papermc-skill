@@ -6,3 +6,4 @@
 - Holograms: Use TextDisplay / ItemDisplay with interpolated JOML transformations.
 - Concurrency: Thread-safe region scheduling. All I/O and DB queries must run asynchronously.
 - Security: Enforce click debounce on GUIs, sanitize numeric inputs against NaN, run `npx papermc-skill audit`.
+
