@@ -1,7 +1,7 @@
 {
   "name": "papermc-skill",
-  "version": "1.1.0",
-  "description": "Interactive CLI and architectural development skill for modern Paper & Folia Minecraft Java plugins",
+  "version": "1.2.0",
+  "description": "Interactive CLI, multi-agent AI installer, and architectural development skill for modern Paper & Folia Minecraft Java plugins",
   "main": "bin/cli.js",
   "bin": {
     "papermc-skill": "bin/cli.js"
@@ -13,6 +13,14 @@
     "docs",
     "skills",
     "assets",
+    "CLAUDE.md",
+    "CODEX.md",
+    "DEEPSEEK.md",
+    ".cursor",
+    ".cursorrules",
+    ".paseo",
+    ".pi",
+    ".windsurfrules",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -25,8 +33,12 @@
     "minecraft-plugin",
     "adventure-api",
     "minimessage",
-    "spigot",
-    "bukkit",
+    "data-components",
+    "display-entities",
+    "claude-code",
+    "cursor",
+    "deepseek",
+    "openai-codex",
     "npx"
   ],
   "author": "Ardian Ryan <https://github.com/ardianryan>",

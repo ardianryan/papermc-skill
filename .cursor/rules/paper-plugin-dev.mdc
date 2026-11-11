@@ -1,0 +1,23 @@
+---
+description: Modern Paper & Folia Minecraft Java plugin development standards
+globs: **/*.java, **/*.gradle.kts, **/paper-plugin.yml, **/config.yml
+---
+
+# Modern Paper & Folia Plugin Development Rules
+
+When editing or generating code in this Minecraft plugin project:
+
+- **Target API**: PaperMC 1.21+ / 26.x on Java 21+ with `folia-supported: true`.
+- **Text & Colors**: Exclusively use Kyori Adventure `Component` and `MiniMessage.miniMessage().deserialize(...)`. Ban `org.bukkit.ChatColor` and `§`.
+- **Items**: Use `DataComponentTypes` (e.g. `FOOD`, `TOOL`, `CUSTOM_MODEL_DATA`). Never touch legacy NBT or reflection.
+- **Holograms**: Spawn `TextDisplay` or `ItemDisplay` with `Billboard.CENTER` and interpolated JOML `Matrix4f` transformations. Never use `ArmorStand`.
+- **Folia Multi-Threading**:
+  - Never call `Bukkit.getScheduler()` for tick tasks without checking Folia compatibility.
+  - Entity mutations: `entity.getScheduler()`.
+  - World/block mutations: `Bukkit.getRegionScheduler()`.
+  - Database & I/O: 100% async (`Bukkit.getAsyncScheduler()`).
+- **Security & Dupes**:
+  - Cancel GUI clicks and apply 200ms debounce.
+  - Store `UUID` instead of `Player` references in static maps to avoid memory leaks.
+  - Reject `NaN`, `Infinity`, and negative values in commands.
+- **Verification**: Run `npx papermc-skill audit` before finishing work.

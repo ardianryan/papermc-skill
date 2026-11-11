@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-11
+
+### Added
+- **Universal Multi-Agent Installation System (`npx papermc-skill install-skill [options]`)**:
+  - Direct installation and rule support for 8 premier AI coding agent platforms:
+    - **Google Antigravity / agy** (`~/.gemini/config/skills/paper-plugin-dev` and `.agents/skills/`)
+    - **Claude Code** (`~/.claude/skills/` and workspace `CLAUDE.md`)
+    - **OpenAI Codex** (`~/.codex/skills/` and workspace `CODEX.md`)
+    - **Cursor** (`.cursor/rules/paper-plugin-dev.mdc` and `.cursorrules`)
+    - **DeepSeek Harness** (`~/.deepseek/skills/` and workspace `DEEPSEEK.md`)
+    - **Paseo** (`~/.paseo/skills/` and workspace `.paseo/rules.md`)
+    - **pi.dev** (`~/.pi/skills/` and workspace `.pi/rules.md`)
+    - **Windsurf** (workspace `.windsurfrules`)
+  - Supports `--all`, `--agent <name>`, `--global`, `--local`, and interactive target selection prompt.
+- **Overpowered (OP) Code Generators (`npx papermc-skill generate <recipe> [name]`)**:
+  - `component-item`: Scaffolds modern Data-Component item builder (MC 1.20.5 - 26.x).
+  - `display-entity`: Scaffolds zero-lag interpolated TextDisplay & ItemDisplay hologram engine.
+  - `mace-combat`: Scaffolds 1.21 Tricky Trials Mace smash physics and shockwave knockback.
+  - `menu-gui`: Scaffolds exploit-proof inventory menu controller with 200ms click debounce.
+- **Masterclass Guide 12: Modern Data Components & Display Entities (`docs/12-data-components-and-display-entities.md`)**:
+  - Comprehensive guide on the paradigm shift from legacy NBT to DataComponentTypes (`io.papermc.paper.datacomponent`), Custom Model Data, Food properties, Tool rules, and JOML Matrix4f smooth client-side interpolation.
+- **Masterclass Guide 13: Multi-Agent System & Universal AI Tooling (`docs/13-multi-agent-system-and-tooling.md`)**:
+  - In-depth architectural setup guide for orchestrating Paper & Folia plugin development across all major AI agent harnesses.
+- **Enhanced Security Audit Scanner**:
+  - Added detection for legacy NBT manipulation (`net.minecraft.nbt`), `BukkitRunnable` on Folia, and `ArmorStand` laggy floating text anti-patterns.
+
+### Changed
+- **PaperMC & Folia Modern Versioning Support**:
+  - Updated compatibility matrix to support Paper 1.21+ through 26.x (Java 21 LTS and Java 25+).
+  - Enriched `skills/paper-plugin-dev/SKILL.md` with modern Tricky Trials combat kinematics and Data Components recipes.
+
 ## [1.1.0] - 2026-10-01
 
 ### Added

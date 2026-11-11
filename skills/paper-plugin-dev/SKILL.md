@@ -1,11 +1,13 @@
 ---
 name: paper-plugin-dev
-description: Expert guidelines, modern architectural blueprints, exploit-prevention patterns, and best practices for developing production-grade Minecraft Java plugins using PaperMC API (1.20-1.21+ / 26.x), Folia (Threaded Regions), Adventure API, MiniMessage, and Data Components.
+description: Expert guidelines, modern architectural blueprints, exploit-prevention patterns, and best practices for developing production-grade Minecraft Java plugins using PaperMC API (1.20-1.21+ / 26.x), Folia (Threaded Regions), Adventure API, MiniMessage, Data Components, Display Entities, and Tricky Trials combat kinematics.
 ---
 
 # Paper & Folia Minecraft Plugin Development Skill
 
 This skill provides authoritative architectural standards, high-level exploit-prevention blueprints, and modern design patterns for building and auditing Minecraft Java server plugins based on **PaperMC (1.20.6, 1.21+ through 26.x)** and **Folia (Regionized Multi-Threading)**.
+
+Compatible with all premier AI coding environments: **Antigravity (agy)**, **Claude Code**, **OpenAI Codex**, **Cursor**, **DeepSeek Harness**, **Paseo**, and **pi.dev**.
 
 ---
 
@@ -13,11 +15,13 @@ This skill provides authoritative architectural standards, high-level exploit-pr
 
 | Component | Minimum Standard | Current Recommendation | Critical Notes |
 | :--- | :--- | :--- | :--- |
-| **Java SDK** | **Java 21 (LTS)** | **Java 21 LTS** / Java 25 Ready | Minecraft 1.20.5+ and modern Paper **require** Java 21+. Target Paper 26.x requires Java 25+. |
-| **Build Tool** | Gradle 8.10+ | **Gradle 9.7+ (Kotlin DSL)** | Use `jvmToolchain(21)` and `pluginManagement { mavenCentral() }`. |
-| **Paper API** | `1.21.4-R0.1-SNAPSHOT` | `1.21.11-R0.1-SNAPSHOT` | Repository: `https://repo.papermc.io/repository/maven-public/` |
+| **Java SDK** | **Java 21 (LTS)** | **Java 21 LTS** / Java 25 Ready | Minecraft 1.20.5+ and modern Paper require Java 21+. Target Paper 26.x requires Java 25+. |
+| **Build Tool** | Gradle 8.10+ | **Gradle 9.x+ (Kotlin DSL)** | Use `jvmToolchain(21)` and `pluginManagement { mavenCentral() }`. |
+| **Paper API** | `1.21.4-R0.1-SNAPSHOT` | `1.21.11-R0.1-SNAPSHOT` / `26.3.build.+` | Repository: `https://repo.papermc.io/repository/maven-public/` |
 | **API Discovery** | Manual | **PaperMC Fill v3 API** | Query real-time versions via `https://fill.papermc.io/v3/projects/paper`. |
 | **Text Handling** | Adventure 4.17+ | **Kyori Adventure + MiniMessage** | Never use `org.bukkit.ChatColor` or the legacy section sign `§`. |
+| **Item Data** | Data Components (1.20.5+) | `io.papermc.paper.datacomponent` | Legacy NBT tags are completely deprecated. Use `DataComponentTypes`. |
+| **Visuals/FX** | ArmorStands (Legacy) | **Display Entities (Text/Item/Block)** | Zero-tick lag, JOML `Matrix4f` smooth client-side interpolation. |
 
 ---
 
@@ -35,13 +39,17 @@ When requested to scaffold, modify, or review a Paper/Folia plugin codebase:
    - Block, World, or Chunk state: `RegionScheduler`.
    - Global server state or announcements: `GlobalRegionScheduler`.
    - Database, File I/O, Web Requests, or compute-heavy math: `AsyncScheduler` or `CompletableFuture`.
-4. **Enforce Exploit & Dupe Prevention Protocols (Mandatory)**:
+4. **Item & Data Component Modernization**:
+   - Never use raw NBT manipulation. Mutate items through `DataComponentTypes` (e.g. `FOOD`, `TOOL`, `CUSTOM_MODEL_DATA`, `MAX_STACK_SIZE`).
+5. **Zero-Lag Visual Displays**:
+   - Replace outdated armor-stand floating holograms with `TextDisplay` and `ItemDisplay` using JOML matrix transformations.
+6. **Enforce Exploit & Dupe Prevention Protocols (Mandatory)**:
    - Validate numeric user input (reject `NaN`, `Infinity`, overflow, and negative amounts).
    - Protect inventory menus against click-spam race conditions via debounce.
    - Store `UUID` rather than `Player` instances across all caches and static collections.
    - Secure custom items using `PersistentDataContainer` (PDC) signatures.
-5. **Compile & Lint Verification**:
-   - Verify build passes clean compilation with zero deprecation warnings.
+7. **Compile & Security Audit**:
+   - Run `npx papermc-skill audit` to guarantee 0 vulnerabilities before releasing code.
 
 ---
 
@@ -83,12 +91,12 @@ Invoking `world.getBlockAt(x, y, z)` on ungenerated/unloaded far chunks (e.g., c
 
 ---
 
-## 4. Modern Production Recipes
+## 4. Modern Overpowered (OP) Recipes
 
 ### Recipe 1: Folia-Ready Modern Manifest (`src/main/resources/paper-plugin.yml`)
 ```yaml
 name: EpicPaperPlugin
-version: '1.0.0'
+version: '1.2.0'
 main: com.example.plugin.EpicPlugin
 bootstrapper: com.example.plugin.EpicPluginBootstrap
 api-version: '1.21'
@@ -156,53 +164,143 @@ public class EpicPluginBootstrap implements PluginBootstrap {
 }
 ```
 
-### Recipe 3: Anti-Tamper PDC Item Utilities
+### Recipe 3: Modern Data Component Item Engineering (Zero-NBT)
 ```java
-package com.example.plugin.util;
+package com.example.plugin.item;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
+import io.papermc.paper.datacomponent.item.FoodProperties;
+import io.papermc.paper.datacomponent.item.ItemLore;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 
-import java.util.UUID;
+import java.util.List;
 
-public final class SafeItemUtil {
+public final class ModernItemBuilder {
 
-    private static NamespacedKey KEY_ITEM_ID;
-    private static NamespacedKey KEY_LEVEL;
-    private static NamespacedKey KEY_SIG;
+    public static ItemStack createGodtierRelic() {
+        ItemStack item = ItemStack.of(Material.NETHERITE_SWORD);
 
-    public static void initKeys(Plugin plugin) {
-        KEY_ITEM_ID = new NamespacedKey(plugin, "custom_id");
-        KEY_LEVEL = new NamespacedKey(plugin, "item_level");
-        KEY_SIG = new NamespacedKey(plugin, "sec_sig");
-    }
+        // Type-safe direct component modification
+        item.setData(DataComponentTypes.ITEM_NAME, Component.text("Aegis of the Void", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
+        item.setData(DataComponentTypes.LORE, ItemLore.lore(List.of(
+            Component.text("Ancient relic harvested from trial chambers.", NamedTextColor.GRAY),
+            Component.empty(),
+            Component.text("✦ Ability: Kinetic Shockwave on hit", NamedTextColor.AQUA)
+        )));
 
-    public static ItemStack createCustomSword(String customId, int level) {
-        ItemStack item = new ItemStack(Material.DIAMOND_SWORD);
-        item.editMeta(meta -> {
-            meta.displayName(MiniMessage.miniMessage().deserialize("<gradient:#00d2ff:#3a7bd5>Excalibur Tier " + level + "</gradient>"));
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            pdc.set(KEY_ITEM_ID, PersistentDataType.STRING, customId);
-            pdc.set(KEY_LEVEL, PersistentDataType.INTEGER, level);
-            pdc.set(KEY_SIG, PersistentDataType.STRING, UUID.randomUUID().toString());
-        });
+        // Modern 1.20.5+ Custom Model Data (floats, strings, flags)
+        item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData()
+            .addFloat(2.5f)
+            .addString("aegis_void_model")
+            .build()
+        );
+
+        // Overrides
+        item.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+        item.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
+        item.setData(DataComponentTypes.UNBREAKABLE, true);
+
         return item;
-    }
-
-    public static boolean isCustomItem(ItemStack item, String expectedId) {
-        if (item == null || !item.hasItemMeta()) return false;
-        String id = item.getItemMeta().getPersistentDataContainer().get(KEY_ITEM_ID, PersistentDataType.STRING);
-        return expectedId.equals(id);
     }
 }
 ```
 
-### Recipe 4: Anti-Dupe GUI Controller with Debounce
+### Recipe 4: Zero-Lag Display Entity Hologram Engine
+```java
+package com.example.plugin.display;
+
+import net.kyori.adventure.text.Component;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.entity.Display;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
+
+public final class DisplayHologramEngine {
+
+    /** Spawns a floating holographic sign with smooth client-side interpolation */
+    public static TextDisplay spawnSmoothHologram(Location loc, Component text) {
+        return loc.getWorld().spawn(loc, TextDisplay.class, display -> {
+            display.text(text);
+            display.setBillboard(Display.Billboard.CENTER);
+            display.setDefaultBackground(false);
+            display.setBackgroundColor(Color.fromARGB(150, 20, 20, 30));
+            display.setShadowed(true);
+
+            // Client-side smooth interpolation (20 ticks = 1 second)
+            display.setInterpolationDuration(20);
+            display.setInterpolationDelay(0);
+
+            // Transformation via JOML
+            Transformation transform = new Transformation(
+                new Vector3f(0f, 0f, 0f),
+                new AxisAngle4f(0f, 0f, 1f, 0f),
+                new Vector3f(1.1f, 1.1f, 1.1f),
+                new AxisAngle4f(0f, 0f, 1f, 0f)
+            );
+            display.setTransformation(transform);
+        });
+    }
+}
+```
+
+### Recipe 5: 1.21 Tricky Trials Mace & Combat Physics
+```java
+package com.example.plugin.combat;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.util.Vector;
+
+public final class MaceKineticCombatListener implements Listener {
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMaceSmash(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player attacker)) return;
+        if (!(event.getEntity() instanceof LivingEntity victim)) return;
+
+        if (attacker.getInventory().getItemInMainHand().getType() != Material.MACE) return;
+
+        float fallDistance = attacker.getFallDistance();
+        if (fallDistance > 1.5f) {
+            double extraDmg = Math.min(fallDistance * 3.5, 45.0);
+            event.setDamage(event.getDamage() + extraDmg);
+
+            Location loc = victim.getLocation();
+            loc.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION, loc.add(0, 0.5, 0), 30, 0.5, 0.2, 0.5, 0.05);
+            loc.getWorld().playSound(loc, Sound.ITEM_MACE_SMASH_GROUND, 1.2f, 1.0f);
+
+            // Shockwave knockback
+            loc.getWorld().getNearbyLivingEntities(loc, 4.5, e -> !e.equals(attacker) && !e.equals(victim))
+                .forEach(e -> {
+                    Vector impulse = e.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(1.3).setY(0.4);
+                    e.setVelocity(impulse);
+                });
+
+            attacker.sendActionBar(Component.text("⚡ SMASH IMPACT: +" + String.format("%.1f", extraDmg) + " DMG", NamedTextColor.GOLD));
+        }
+    }
+}
+```
+
+### Recipe 6: Anti-Dupe GUI Controller with Debounce
 ```java
 package com.example.plugin.gui;
 
@@ -278,14 +376,12 @@ public class SafeMenuController implements InventoryHolder, Listener {
     }
 
     private void handleSlotAction(Player player, int slot) {
-        // Handle slot action safely
+        // Safe slot logic
     }
 }
 ```
 
-### Recipe 5: Universal Folia & Paper Scheduler Adapter
-Transparently dispatches execution safely whether running on standard Paper or multi-threaded Folia:
-
+### Recipe 7: Universal Folia & Paper Scheduler Adapter
 ```java
 package com.example.plugin.util;
 
@@ -315,7 +411,6 @@ public final class UniversalScheduler {
         return IS_FOLIA;
     }
 
-    /** Dispatches a task to the region scheduler owning the specified entity */
     public static void runForEntity(Plugin plugin, Entity entity, Runnable runnable) {
         if (IS_FOLIA) {
             entity.getScheduler().run(plugin, task -> runnable.run(), null);
@@ -324,7 +419,6 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Dispatches a task to the region scheduler owning the specified location */
     public static void runAtLocation(Plugin plugin, Location location, Runnable runnable) {
         if (IS_FOLIA) {
             Bukkit.getRegionScheduler().execute(plugin, location, runnable);
@@ -333,7 +427,6 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Dispatches a purely asynchronous task (I/O, database, networking) */
     public static void runAsync(Plugin plugin, Runnable runnable) {
         if (IS_FOLIA) {
             Bukkit.getAsyncScheduler().runNow(plugin, task -> runnable.run());
@@ -342,73 +435,12 @@ public final class UniversalScheduler {
         }
     }
 
-    /** Dispatches a delayed asynchronous task */
     public static void runAsyncDelayed(Plugin plugin, Runnable runnable, long delayMs) {
         if (IS_FOLIA) {
             Bukkit.getAsyncScheduler().runDelayed(plugin, task -> runnable.run(), delayMs, TimeUnit.MILLISECONDS);
         } else {
             long ticks = Math.max(1L, delayMs / 50L);
             Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticks);
-        }
-    }
-}
-```
-
-### Recipe 6: Robust Asynchronous Database Access (HikariCP)
-```java
-package com.example.plugin.database;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class DatabaseManager {
-
-    private final HikariDataSource dataSource;
-    private final ExecutorService dbExecutor = Executors.newFixedThreadPool(4);
-
-    public DatabaseManager(String jdbcUrl, String username, String password) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setConnectionTimeout(5000);
-        config.setPoolName("PaperPlugin-HikariPool");
-        this.dataSource = new HikariDataSource(config);
-    }
-
-    public CompletableFuture<Integer> getCoinsAsync(UUID playerUuid) {
-        return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT coins FROM player_data WHERE uuid = ?";
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, playerUuid.toString());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt("coins");
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return 0;
-        }, dbExecutor);
-    }
-
-    public void shutdown() {
-        dbExecutor.shutdown();
-        if (dataSource != null && !dataSource.isClosed()) {
-            dataSource.close();
         }
     }
 }
@@ -422,12 +454,12 @@ public class DatabaseManager {
 | :--- | :--- | :--- |
 | `ChatColor.RED + "Message"` | Deprecated & breaks console/client formatting | `MiniMessage.miniMessage().deserialize("<red>Message</red>")` |
 | `public static Set<Player> list;` | Causes massive **Memory Leaks** of worlds & connections | `public static Set<UUID> list;` |
+| Direct NBT manipulation (`net.minecraft.nbt`) | Hard crashes on 1.20.5+ / 1.21+ / 26.x | `ItemStack#setData(DataComponentTypes.XXX)` |
+| `ArmorStand` floating text holograms | Extreme entity ticking CPU overhead | `TextDisplay` with JOML interpolated transformations |
 | `world.getChunkAt(x, z)` in a loop | Freezes main server tick thread (major TPS drops) | `world.getChunkAtAsync(x, z)` |
 | `Bukkit.getScheduler()` on Folia | Throws exception or causes thread-safety desync | Use `RegionScheduler`, `EntityScheduler`, or `UniversalScheduler` |
 | Modifying inventories asynchronously | Causes item duplication and memory corruption | Always dispatch inventory modifications to entity region thread |
 | Concatenating raw SQL queries | High vulnerability to **SQL Injection** | Always use `PreparedStatement` with `?` parameters |
-| `new NamespacedKey(...)` in event loops | Excessive GC allocation pressure | Define constants as `public static final NamespacedKey` |
-| Relying on item displayName/lore | Easily forged via anvils or modified clients | Always verify identity and attributes via **PDC** |
 | Unbounded numbers in economy commands | Susceptible to `NaN`, negative amounts, and overflow | Validate `Double.isFinite()` and enforce minimum/maximum boundaries |
 
 ---
@@ -438,10 +470,12 @@ Prior to releasing a plugin to production or public servers:
 
 - [ ] `paper-plugin.yml` is defined with `folia-supported: true`.
 - [ ] Zero references to `org.bukkit.ChatColor` across the codebase.
+- [ ] Direct NBT or legacy ItemMeta serialization replaced by `DataComponentTypes`.
+- [ ] Holograms and floating 3D icons use `Display` entities rather than armor stands.
 - [ ] All command registration uses modern Brigadier (`LifecycleEvents.COMMANDS`).
 - [ ] No direct storage of `Player`, `World`, or `Entity` instances in static collections.
 - [ ] All File, Database, and HTTP operations execute 100% asynchronously.
 - [ ] Custom GUIs implement `setCancelled(true)` and click debounce cooldowns.
 - [ ] Custom items are identified and verified via `PersistentDataContainer` (PDC).
 - [ ] All database queries use connection pooling enclosed in `try-with-resources`.
-- [ ] Plugin compiles cleanly using Gradle 9.x targeting Java 21 LTS.
+- [ ] Plugin passes `npx papermc-skill audit` with zero issues.

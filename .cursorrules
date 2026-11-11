@@ -1,0 +1,6 @@
+# Cursor Rules: Modern Paper & Folia Development
+- Use Kyori Adventure & MiniMessage (`<green>`, `<gradient:...>`). Never use ChatColor or '§'.
+- Use DataComponentTypes for items.
+- Use Display Entities with JOML Matrix4f transformations for holograms.
+- Adhere to Folia region-threading rules.
+- Audit security using `npx papermc-skill audit`.

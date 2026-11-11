@@ -1,0 +1,7 @@
+# Windsurf Rules: Modern Paper & Folia Development
+
+- Exclusively use Kyori Adventure & MiniMessage (`<color>`, `<gradient>`). Legacy ChatColor is banned.
+- Items: Use DataComponentTypes (Minecraft 1.20.5+ / 26.x). No raw NBT.
+- Holograms: Use Display Entities (TextDisplay, ItemDisplay) with JOML Matrix4f transformations.
+- Concurrency: Folia region-safe scheduling (`player.getScheduler()`, `Bukkit.getRegionScheduler()`).
+- Security: Sanitize all inputs against NaN and negative bounds. Audit code using `npx papermc-skill audit`.
